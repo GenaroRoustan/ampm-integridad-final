@@ -53,6 +53,19 @@ const parseTimestamp = (value: unknown): number => {
   return Number.isFinite(ts) ? ts : 0;
 };
 
+const normalizeDecisionKey = (value: unknown): Decision => {
+  const normalized = asString(value)
+    .toUpperCase()
+    .replace(/_/g, ' ')
+    .trim();
+
+  if (normalized === 'NO APTO') return 'NO_APTO';
+  if (normalized === 'APTO') return 'APTO';
+  if (normalized === 'CONTRATAR') return 'CONTRATAR';
+  if (normalized === 'REVISAR') return 'REVISAR';
+  return 'INVALIDA';
+};
+
 const normalizeCandidate = (raw: unknown): CandidateRecord | null => {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
@@ -63,8 +76,9 @@ const normalizeCandidate = (raw: unknown): CandidateRecord | null => {
   const dateStr = asString(dateRaw);
   const timestamp = parseTimestamp(dateRaw);
 
-  const decisionRaw = asString(r.decision ?? r.decision_final ?? r.resultado ?? r.decisionFinal).toUpperCase();
-  const decision = (decisionRaw || 'INVALIDA') as Decision;
+  const decision = normalizeDecisionKey(
+    r.decision ?? r.decision_final ?? r.resultado ?? r.decisionFinal
+  );
 
   const honestyScore = asNumber(r.honestyScore ?? r.honestidadScore ?? r.honesty ?? r.honestidad);
   const sincerityScore = asNumber(r.sincerityScore ?? r.sinceridadScore ?? r.sincerity ?? r.sinceridad);
@@ -170,15 +184,56 @@ export default function HRDashboard() {
 
   const generateLink = () => {
     const token = `${Date.now()}-${Math.random().toString(36).substr(2, 12)}`;
-    const link = `${window.location.origin}/test?token=${token}`;
+    const link = `https://proxy-seguridad.replit.app/?token=${token}`;
     setGeneratedLink(link);
     setLinkCopied(false);
   };
 
+  const copyTextFallback = (text: string): boolean => {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '0';
+      textarea.style.left = '0';
+      textarea.style.opacity = '0';
+      textarea.style.pointerEvents = 'none';
+
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+
+      const ok = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return ok;
+    } catch {
+      return false;
+    }
+  };
+
   const copyLink = async () => {
-    await navigator.clipboard.writeText(generatedLink);
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
+    const linkToCopy = generatedLink;
+    if (!linkToCopy) return;
+
+    try {
+      const hasClipboardApi = typeof navigator.clipboard?.writeText === 'function';
+      if (!hasClipboardApi || !window.isSecureContext) {
+        throw new Error('Clipboard API not available in this context');
+      }
+
+      await navigator.clipboard.writeText(linkToCopy);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      const ok = copyTextFallback(linkToCopy);
+      if (ok) {
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      } else {
+        setLinkCopied(false);
+      }
+    }
   };
 
   const getDecisionBadge = (decision: Decision) => {
@@ -325,10 +380,14 @@ export default function HRDashboard() {
                 />
                 <button
                   onClick={copyLink}
-                  className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors"
+                  className={`flex items-center gap-1 transition-colors ${
+                    linkCopied
+                      ? 'text-stage-autocritica'
+                      : 'text-primary hover:text-primary/80'
+                  }`}
                 >
-                  {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  <span className="text-sm">{linkCopied ? 'Copiado' : 'Copiar'}</span>
+                  {!linkCopied && <Copy className="w-4 h-4" />}
+                  <span className="text-sm">{linkCopied ? '✅ Copiado' : 'Copiar'}</span>
                 </button>
               </div>
             )}

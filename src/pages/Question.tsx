@@ -12,8 +12,8 @@ import { saveAssessmentRecord } from '@/lib/assessmentRecords';
 import { ArrowRight } from 'lucide-react';
 
 const QUESTION_TIME_LIMIT = 45;
-const URL_PROXY =
-  'https://1af6b3d2-c97f-40af-b449-157f80c80cfe-00-1uopip4hjpefr.spock.replit.dev/enviar-prueba';
+const PROXY_BASE_URL = 'https://proxy-seguridad.replit.app';
+const URL_PROXY = `${PROXY_BASE_URL.replace(/\/+$/, '')}/enviar-prueba`;
 
 export default function Question() {
   const navigate = useNavigate();

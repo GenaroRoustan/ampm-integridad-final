@@ -11,7 +11,7 @@ export const questions: Question[] = [
   { id: 'H07', text: '¿Ha rechazado participar en actividades que consideraba incorrectas?', stage: 'honesty', reverseScoring: false },
   { id: 'H08', text: '¿Ha informado a sus superiores cuando detectó alguna irregularidad?', stage: 'honesty', reverseScoring: false },
   { id: 'H09', text: '¿Ha aceptado regalos de proveedores a cambio de favores?', stage: 'honesty', reverseScoring: true },
-  { id: 'H10', text: '¿Ha modificado registros o documentos para beneficio personal?', stage: 'honesty', reverseScoring: true },
+  { id: 'H10', text: '¿Alguna vez ha alterado datos o cifras del trabajo para sacar alguna ventaja?', stage: 'honesty', reverseScoring: true },
   { id: 'H11', text: '¿Ha cumplido las normas de la empresa aunque nadie lo supervise?', stage: 'honesty', reverseScoring: false },
   { id: 'H12', text: '¿Ha cobrado de más a un cliente aprovechando su desconocimiento?', stage: 'honesty', reverseScoring: true },
   { id: 'H13', text: '¿Ha revelado información confidencial de su trabajo a terceros?', stage: 'honesty', reverseScoring: true },
@@ -32,7 +32,7 @@ export const questions: Question[] = [
   { id: 'S11', text: '¿Ha dado su opinión honesta aunque fuera impopular?', stage: 'sincerity', reverseScoring: false },
   { id: 'S12', text: '¿Ha manipulado información para hacer quedar mal a alguien?', stage: 'sincerity', reverseScoring: true },
   { id: 'S13', text: '¿Ha sido transparente sobre sus limitaciones profesionales?', stage: 'sincerity', reverseScoring: false },
-  { id: 'S14', text: '¿Ha evitado responder preguntas directas para no comprometerse?', stage: 'sincerity', reverseScoring: true },
+  { id: 'S14', text: '¿Ha dado respuestas vagas o confusas a propósito para no meterse en problemas?', stage: 'sincerity', reverseScoring: true },
   { id: 'S15', text: '¿Ha mantenido su palabra incluso cuando era difícil?', stage: 'sincerity', reverseScoring: false },
 
   // AUTOCRÍTICA (15 preguntas)
