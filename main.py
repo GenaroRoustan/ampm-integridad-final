@@ -1,26 +1,21 @@
 import os
 import requests
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-# Configuramos la carpeta 'dist' donde Vite guarda el HTML y assets
-app = Flask(__name__, static_folder="dist", static_url_path="")
+app = Flask(__name__)
 CORS(app)
 
 N8N_URL = os.environ.get('N8N_WEBHOOK_URL')
 API_KEY = os.environ.get('N8N_API_KEY')
 
-# --- MANEJO DEL FRONTEND ---
-
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_spa(path):
-    # 1. Si pides un archivo real (como /vite.svg), lo entregamos desde dist
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    
-    # 2. Para cualquier otra cosa (incluyendo la raíz /), entregamos el index.html
-    return send_from_directory(app.static_folder, "index.html")
+@app.route('/', methods=['GET'])
+def status():
+    return jsonify({
+        "status": "ok",
+        "service": "proxy",
+        "n8n_configured": bool(N8N_URL),
+    }), 200
 
 # --- MANEJO DE LA API ---
 
