@@ -184,7 +184,7 @@ export default function HRDashboard() {
 
   const generateLink = () => {
     const token = `${Date.now()}-${Math.random().toString(36).substr(2, 12)}`;
-    const link = `https://proxy-seguridad.replit.app/?token=${token}`;
+    const link = `http://192.168.0.56:8081/test?token=${token}`;
     setGeneratedLink(link);
     setLinkCopied(false);
   };

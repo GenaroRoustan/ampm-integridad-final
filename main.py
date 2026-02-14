@@ -11,11 +11,7 @@ API_KEY = os.environ.get('N8N_API_KEY')
 
 @app.route('/', methods=['GET'])
 def status():
-    return jsonify({
-        "status": "ok",
-        "service": "proxy",
-        "n8n_configured": bool(N8N_URL),
-    }), 200
+    return "🛡️ Proxy Listo", 200
 
 # --- MANEJO DE LA API ---
 
