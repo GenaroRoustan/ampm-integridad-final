@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=['https://genaroroustan.github.io'])
 
 N8N_URL = os.environ.get('N8N_WEBHOOK_URL')
 API_KEY = os.environ.get('N8N_API_KEY')

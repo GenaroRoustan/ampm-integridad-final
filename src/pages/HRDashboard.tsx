@@ -127,6 +127,8 @@ export default function HRDashboard() {
     'Operativo',
   ];
 
+  const APP_PUBLIC_BASE_URL = 'https://genaroroustan.github.io/ampm-integridad-final';
+
   useEffect(() => {
     const sessionData = sessionStorage.getItem('hr_session');
     if (!sessionData) {
@@ -206,7 +208,7 @@ export default function HRDashboard() {
     if (!selectedPuesto) return;
     const token = `${Date.now()}-${Math.random().toString(36).substr(2, 12)}`;
     const puestoParam = selectedPuesto.replace(/\s+/g, '_');
-    const link = `http://192.168.0.56:8081/test?token=${token}&puesto=${encodeURIComponent(puestoParam)}`;
+    const link = `${APP_PUBLIC_BASE_URL}/test?token=${token}&puesto=${encodeURIComponent(puestoParam)}`;
     setGeneratedLink(link);
     setLinkCopied(false);
   };

@@ -118,13 +118,15 @@ export default function Question() {
       const { result, meta } = calculateAssessmentResult(questions, answersForScoring);
       const nowIso = new Date().toISOString();
 
+      const puesto = (state.puesto ?? '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+
       const record = {
         id: state.assessmentId || `ASM-${nowIso}`,
         assessmentId: state.assessmentId || `ASM-${nowIso}`,
         token: state.token,
         name: state.candidateInfo?.fullName ?? 'Sin nombre',
         cedula: state.candidateInfo?.cedula ?? '',
-        puesto: state.puesto ?? '',
+        puesto,
         createdAt: nowIso,
         skippedCount: meta.skippedCount,
         answeredCount: meta.answeredCount,

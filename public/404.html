@@ -3,21 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Redirecting...</title>
+    <title>📝 Test de Integridad Corporativa | AMPM</title>
+    <meta
+      name="description"
+      content="Completa tu evaluación de ingreso. El enlace es único e intransferible."
+    />
+    <meta name="author" content="AMPM" />
+
+    <meta property="og:title" content="📝 Test de Integridad Corporativa | AMPM" />
+    <meta property="og:description" content="Completa tu evaluación de ingreso. El enlace es único e intransferible." />
+    <meta property="og:image" content="https://www.ampm.com.ni/wp-content/uploads/2021/03/logo-ampm.png" />
+    <meta property="og:url" content="https://proxy-seguridad.replit.app" />
+    <meta property="og:type" content="website" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@AMPM" />
+    <meta name="twitter:image" content="https://www.ampm.com.ni/wp-content/uploads/2021/03/logo-ampm.png" />
+
+    <!-- GitHub Pages SPA fallback (supports BrowserRouter on refresh) -->
     <script type="text/javascript">
-      // GitHub Pages SPA redirect
-      // For project pages: segmentCount = 1 (/<repo>/...)
       (function () {
-        var segmentCount = 1;
         var l = window.location;
-        var base = l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/';
-        var path = l.pathname.slice(base.length);
-        var redirect = base + '?/' + path;
-        if (l.search) redirect += l.search.replace(/\?/g, '&');
-        if (l.hash) redirect += l.hash;
-        l.replace(redirect.replace(/&/g, '~and~'));
+        if (l.search && l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&');
+            })
+            .join('?');
+          window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+        }
       })();
     </script>
   </head>
-  <body></body>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
