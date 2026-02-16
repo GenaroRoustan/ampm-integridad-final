@@ -19,6 +19,23 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@AMPM" />
     <meta name="twitter:image" content="https://www.ampm.com.ni/wp-content/uploads/2021/03/logo-ampm.png" />
+
+    <!-- GitHub Pages SPA fallback (supports BrowserRouter on refresh) -->
+    <script type="text/javascript">
+      (function () {
+        var l = window.location;
+        if (l.search && l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&');
+            })
+            .join('?');
+          window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+        }
+      })();
+    </script>
   </head>
 
   <body>

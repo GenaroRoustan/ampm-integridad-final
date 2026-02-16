@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting...</title>
+    <script type="text/javascript">
+      // GitHub Pages SPA redirect
+      // For project pages: segmentCount = 1 (/<repo>/...)
+      (function () {
+        var segmentCount = 1;
+        var l = window.location;
+        var base = l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/';
+        var path = l.pathname.slice(base.length);
+        var redirect = base + '?/' + path;
+        if (l.search) redirect += l.search.replace(/\?/g, '&');
+        if (l.hash) redirect += l.hash;
+        l.replace(redirect.replace(/&/g, '~and~'));
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

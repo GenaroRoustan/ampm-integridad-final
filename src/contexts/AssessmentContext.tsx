@@ -6,6 +6,7 @@ import { questions } from '@/data/questions';
 interface AssessmentContextType {
   state: AssessmentState;
   setToken: (token: string) => void;
+  setPuesto: (puesto: string | null) => void;
   setCandidateInfo: (info: CandidateInfo) => void;
   startAssessment: () => void;
   answerQuestion: (questionId: string, value: AnswerValue, timeSpent: number) => void;
@@ -19,6 +20,7 @@ interface AssessmentContextType {
 const initialState: AssessmentState = {
   token: '',
   assessmentId: '',
+  puesto: null,
   candidateInfo: null,
   currentQuestionIndex: 0,
   answers: [],
@@ -36,6 +38,13 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
       ...prev,
       token,
       assessmentId: `ASM-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    }));
+  }, []);
+
+  const setPuesto = useCallback((puesto: string | null) => {
+    setState((prev: AssessmentState) => ({
+      ...prev,
+      puesto,
     }));
   }, []);
 
@@ -106,6 +115,7 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
       value={{
         state,
         setToken,
+        setPuesto,
         setCandidateInfo,
         startAssessment,
         answerQuestion,

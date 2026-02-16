@@ -23,6 +23,7 @@ export interface CandidateInfo {
 export interface AssessmentState {
   token: string;
   assessmentId: string;
+  puesto: string | null;
   candidateInfo: CandidateInfo | null;
   currentQuestionIndex: number;
   answers: Answer[];

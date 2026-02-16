@@ -4,11 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { AMPMLogo } from '@/components/AMPMLogo';
 import { Lock, User, Eye, EyeOff } from 'lucide-react';
 
-// MVP: Basic auth - will be replaced with Azure AD
-const DEMO_CREDENTIALS = {
-  username: 'admin',
-  password: 'ampm2024',
-};
+const PROXY_BASE_URL = 'https://proxy-seguridad.replit.app';
+const HR_LOGIN_URL = `${PROXY_BASE_URL}/hr/login`;
 
 export default function HRLogin() {
   const navigate = useNavigate();
@@ -23,20 +20,39 @@ export default function HRLogin() {
     setError('');
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      const res = await fetch(HR_LOGIN_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          username: username.trim(),
+          password,
+        }),
+      });
 
-    if (username === DEMO_CREDENTIALS.username && password === DEMO_CREDENTIALS.password) {
+      if (!res.ok) {
+        setError('Credenciales incorrectas. Por favor intente nuevamente.');
+        return;
+      }
+
+      const data: unknown = await res.json().catch(() => null);
+      const user = typeof (data as { user?: unknown } | null)?.user === 'string'
+        ? (data as { user: string }).user
+        : username.trim();
+
       sessionStorage.setItem('hr_session', JSON.stringify({
-        user: username,
+        user,
         expiresAt: Date.now() + 8 * 60 * 60 * 1000, // 8 hours
       }));
       navigate('/hr/dashboard');
-    } else {
-      setError('Credenciales incorrectas. Por favor intente nuevamente.');
+    } catch {
+      setError('No se pudo conectar al servidor. Intente nuevamente.');
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (

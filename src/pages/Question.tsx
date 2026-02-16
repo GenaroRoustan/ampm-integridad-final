@@ -13,7 +13,7 @@ import { ArrowRight } from 'lucide-react';
 
 const QUESTION_TIME_LIMIT = 45;
 const PROXY_BASE_URL = 'https://proxy-seguridad.replit.app';
-const URL_PROXY = `${PROXY_BASE_URL.replace(/\/+$/, '')}/enviar-prueba`;
+const URL_PROXY = `${PROXY_BASE_URL}/enviar-prueba`;
 
 export default function Question() {
   const navigate = useNavigate();
@@ -124,6 +124,7 @@ export default function Question() {
         token: state.token,
         name: state.candidateInfo?.fullName ?? 'Sin nombre',
         cedula: state.candidateInfo?.cedula ?? '',
+        puesto: state.puesto ?? '',
         createdAt: nowIso,
         skippedCount: meta.skippedCount,
         answeredCount: meta.answeredCount,
@@ -144,6 +145,7 @@ export default function Question() {
             body: JSON.stringify({
               fullName: record.name,
               cedula: record.cedula,
+              puesto: record.puesto,
               answers: answersForScoring,
             }),
           });

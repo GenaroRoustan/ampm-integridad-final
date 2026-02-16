@@ -99,6 +99,15 @@ const normalizeCandidate = (raw: unknown): CandidateRecord | null => {
   };
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getArrayProp = (value: unknown, key: string): unknown[] | null => {
+  if (!isRecord(value)) return null;
+  const prop = value[key];
+  return Array.isArray(prop) ? (prop as unknown[]) : null;
+};
+
 export default function HRDashboard() {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
@@ -109,6 +118,14 @@ export default function HRDashboard() {
   const [generatedLink, setGeneratedLink] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [selectedPuesto, setSelectedPuesto] = useState('');
+
+  const puestos = [
+    'Agente SAC',
+    'Asistente de Gerente de tienda',
+    'Gerente de tienda',
+    'Operativo',
+  ];
 
   useEffect(() => {
     const sessionData = sessionStorage.getItem('hr_session');
@@ -149,13 +166,11 @@ export default function HRDashboard() {
           throw new Error(`HTTP ${res.status}`);
         }
         const data: unknown = await res.json();
-        const list = Array.isArray(data)
-          ? data
-          : Array.isArray((data as any)?.candidates)
-            ? (data as any).candidates
-            : Array.isArray((data as any)?.data)
-              ? (data as any).data
-              : [];
+        const list: unknown[] =
+          (Array.isArray(data) ? data : null) ??
+          getArrayProp(data, 'candidates') ??
+          getArrayProp(data, 'data') ??
+          [];
 
         const normalized = (list as unknown[])
           .map(normalizeCandidate)
@@ -165,7 +180,12 @@ export default function HRDashboard() {
         setCandidates(normalized);
       })
       .catch((err: unknown) => {
-        if ((err as any)?.name === 'AbortError') return;
+        if (
+          (err instanceof DOMException && err.name === 'AbortError') ||
+          (isRecord(err) && err.name === 'AbortError')
+        ) {
+          return;
+        }
         setCandidatesError('No se pudieron cargar los datos en vivo.');
         setCandidates([]);
       })
@@ -183,8 +203,10 @@ export default function HRDashboard() {
   };
 
   const generateLink = () => {
+    if (!selectedPuesto) return;
     const token = `${Date.now()}-${Math.random().toString(36).substr(2, 12)}`;
-    const link = `http://192.168.0.56:8081/test?token=${token}`;
+    const puestoParam = selectedPuesto.replace(/\s+/g, '_');
+    const link = `http://192.168.0.56:8081/test?token=${token}&puesto=${encodeURIComponent(puestoParam)}`;
     setGeneratedLink(link);
     setLinkCopied(false);
   };
@@ -360,9 +382,28 @@ export default function HRDashboard() {
             Generar enlace de prueba
           </h2>
           <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Puesto
+              </label>
+              <select
+                value={selectedPuesto}
+                onChange={(e) => setSelectedPuesto(e.target.value)}
+                aria-label="Puesto"
+                className="w-full h-11 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="">Selecciona un puesto</option>
+                {puestos.map((puesto) => (
+                  <option key={puesto} value={puesto}>
+                    {puesto}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={generateLink}
-              className="btn-primary flex items-center justify-center gap-2 sm:w-auto"
+              disabled={!selectedPuesto}
+              className="btn-primary flex items-center justify-center gap-2 sm:w-auto disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <RefreshCw className="w-4 h-4" />
               Generar nuevo enlace
