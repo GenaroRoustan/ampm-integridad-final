@@ -34,7 +34,8 @@ interface CandidateRecord {
   _timestamp: number;
 }
 
-const DASHBOARD_DATA_URL = 'https://genaroroustan1.app.n8n.cloud/webhook/dashboard-data';
+const PROXY_BASE_URL = 'https://proxy-seguridad.replit.app';
+const DASHBOARD_DATA_PROXY_URL = `${PROXY_BASE_URL}/dashboard-data`;
 
 const asString = (value: unknown): string => {
   if (typeof value === 'string') return value;
@@ -156,7 +157,13 @@ export default function HRDashboard() {
     setIsLoadingCandidates(true);
     setCandidatesError(null);
 
-    fetch(DASHBOARD_DATA_URL, {
+    const params = new URLSearchParams(window.location.search);
+    const dashboardToken = params.get('token') || (import.meta.env.VITE_DASHBOARD_TOKEN as string | undefined) || '';
+    const url = dashboardToken
+      ? `${DASHBOARD_DATA_PROXY_URL}?token=${encodeURIComponent(dashboardToken)}`
+      : DASHBOARD_DATA_PROXY_URL;
+
+    fetch(url, {
       method: 'GET',
       headers: {
         Accept: 'application/json',

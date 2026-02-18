@@ -9,6 +9,8 @@ CORS(app, origins=['https://genaroroustan.github.io'])
 
 N8N_URL = os.environ.get('N8N_WEBHOOK_URL')
 API_KEY = os.environ.get('N8N_API_KEY')
+N8N_DASHBOARD_URL = os.environ.get('N8N_DASHBOARD_URL') or 'https://genaroroustan1.app.n8n.cloud/webhook/dashboard-data'
+N8N_DASHBOARD_API_KEY = os.environ.get('N8N_DASHBOARD_API_KEY') or API_KEY
 HR_USERNAME = os.environ.get('HR_USERNAME')
 HR_PASSWORD = os.environ.get('HR_PASSWORD')
 
@@ -33,6 +35,32 @@ def proxy_n8n():
             except:
                 return jsonify({"message": "✅ Datos recibidos correctamente"}), 200
         return jsonify({"error": "n8n error"}), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/dashboard-data', methods=['GET'])
+def proxy_dashboard_data():
+    try:
+        token = request.args.get('token', '')
+
+        if not N8N_DASHBOARD_API_KEY:
+            return jsonify({"error": "Falta X-API-KEY en Secrets"}), 500
+
+        url = N8N_DASHBOARD_URL
+        if token:
+            url = f"{url}?token={token}"
+
+        headers = {
+            "Accept": "application/json",
+            "X-API-KEY": N8N_DASHBOARD_API_KEY,
+        }
+
+        response = requests.get(url, headers=headers, timeout=20)
+        try:
+            return jsonify(response.json()), response.status_code
+        except:
+            return jsonify({"error": "Respuesta inválida desde n8n"}), 502
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
