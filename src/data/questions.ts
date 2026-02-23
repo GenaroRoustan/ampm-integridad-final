@@ -65,3 +65,4 @@ export const getStageForQuestionIndex = (index: number): Question['stage'] => {
 export const getQuestionIndexInStage = (index: number): number => {
   return (index % 15) + 1;
 };
+
