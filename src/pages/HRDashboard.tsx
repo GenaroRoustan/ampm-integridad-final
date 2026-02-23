@@ -123,7 +123,6 @@ export default function HRDashboard() {
 
   const puestos = [
     'Agente SAC',
-    'Asistente de Gerente de tienda',
     'Gerente de tienda',
     'Operativo',
   ];
@@ -157,13 +156,8 @@ export default function HRDashboard() {
     setIsLoadingCandidates(true);
     setCandidatesError(null);
 
-    const params = new URLSearchParams(window.location.search);
-    const dashboardToken = params.get('token') || (import.meta.env.VITE_DASHBOARD_TOKEN as string | undefined) || '';
-    const url = dashboardToken
-      ? `${DASHBOARD_DATA_PROXY_URL}?token=${encodeURIComponent(dashboardToken)}`
-      : DASHBOARD_DATA_PROXY_URL;
-
-    fetch(url, {
+    // Master mode: always fetch the full list (no token sent from frontend).
+    fetch(DASHBOARD_DATA_PROXY_URL, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -477,24 +471,18 @@ export default function HRDashboard() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Fecha</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Nombre</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Cédula</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Fecha</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Hon.</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Sin.</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Aut.</th>
                   <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Decisión</th>
                 </tr>
               </thead>
               <tbody>
                 {!isLoadingCandidates && !candidatesError && displayedCandidates.map((record) => (
                   <tr key={record.id} className="border-b border-border/50 hover:bg-muted/50 transition-colors">
+                    <td className="py-3 px-4 text-sm text-muted-foreground">{record.date || '-'}</td>
                     <td className="py-3 px-4 text-sm font-medium text-foreground">{record.name}</td>
                     <td className="py-3 px-4 text-sm text-muted-foreground">{record.cedula || '-'}</td>
-                    <td className="py-3 px-4 text-sm text-muted-foreground">{record.date || '-'}</td>
-                    <td className="py-3 px-4 text-sm text-center text-foreground">{record.honestyScore ?? '-'}</td>
-                    <td className="py-3 px-4 text-sm text-center text-foreground">{record.sincerityScore ?? '-'}</td>
-                    <td className="py-3 px-4 text-sm text-center text-foreground">{record.autocriticaScore ?? '-'}</td>
                     <td className="py-3 px-4 text-center">{getDecisionBadge(record.decision)}</td>
                   </tr>
                 ))}
