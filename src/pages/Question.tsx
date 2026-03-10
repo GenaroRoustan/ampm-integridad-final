@@ -18,20 +18,35 @@ const URL_PROXY = `${PROXY_BASE_URL}/enviar-prueba`;
 export default function Question() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { state, getCurrentQuestion, getProgress, answerQuestion, skipQuestion, nextQuestion, completeAssessment } = useAssessment();
-  
+  const {
+    state,
+    getCurrentQuestion,
+    getProgress,
+    answerQuestion,
+    skipQuestion,
+    nextQuestion,
+    completeAssessment,
+    getQuestionStartTimestamp,
+    setQuestionStartTimestamp,
+  } = useAssessment();
+
   const [selectedAnswer, setSelectedAnswer] = useState<AnswerValue | null>(null);
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   const [timerActive, setTimerActive] = useState(true);
-  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
-  const [remaining, setRemaining] = useState(QUESTION_TIME_LIMIT);
-  const intervalRef = useRef<number | null>(null);
+  const [remaining, setRemaining] = useState<number>(() => {
+    // ── Al montar (incluso tras refresh), calcular tiempo real restante ──
+    const startTs = Number(sessionStorage.getItem('ampm_question_start_ts') || Date.now());
+    const elapsed = Math.floor((Date.now() - startTs) / 1000);
+    return Math.max(QUESTION_TIME_LIMIT - elapsed, 0);
+  });
 
+  const intervalRef = useRef<number | null>(null);
   const currentQuestion = getCurrentQuestion();
   const progress = getProgress();
   const currentStage = getStageForQuestionIndex(state.currentQuestionIndex);
-  const previousStage = state.currentQuestionIndex > 0 ? getStageForQuestionIndex(state.currentQuestionIndex - 1) : null;
-
+  const previousStage = state.currentQuestionIndex > 0
+    ? getStageForQuestionIndex(state.currentQuestionIndex - 1)
+    : null;
   const stageIntroFor = (location.state as { stageIntroFor?: Stage } | null)?.stageIntroFor;
 
   const upsertAnswer = (
@@ -55,17 +70,33 @@ export default function Question() {
     }
   }, [state.currentQuestionIndex, currentStage, previousStage, navigate, stageIntroFor]);
 
+  // Al cambiar de pregunta (no en el primer render): resetear timer y guardar nuevo timestamp
+  const isFirstRender = useRef(true);
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      // Primera carga — el remaining ya fue calculado en el useState inicial
+      // Si ya llegó a 0 (el candidato tardó demasiado en refrescar), mostrar timeout
+      if (remaining === 0) {
+        setTimerActive(false);
+        setShowTimeoutModal(true);
+      }
+      return;
+    }
+    // Cambio real de pregunta
     setSelectedAnswer(null);
     setShowTimeoutModal(false);
     setTimerActive(true);
-    setQuestionStartTime(Date.now());
+    const now = Date.now();
+    setQuestionStartTimestamp(now);
     setRemaining(QUESTION_TIME_LIMIT);
   }, [state.currentQuestionIndex]);
 
+  // Timer loop
   useEffect(() => {
     if (intervalRef.current !== null) { window.clearInterval(intervalRef.current); intervalRef.current = null; }
-    if (!timerActive) return;
+    if (!timerActive || remaining === 0) return;
+
     intervalRef.current = window.setInterval(() => {
       setRemaining(prev => {
         const next = Math.max(prev - 1, 0);
@@ -77,16 +108,22 @@ export default function Question() {
         return next;
       });
     }, 1000);
+
     return () => { if (intervalRef.current !== null) { window.clearInterval(intervalRef.current); intervalRef.current = null; } };
-  }, [timerActive, state.currentQuestionIndex]);
+  }, [timerActive]);
+
+  const getTimeSpent = () => {
+    const startTs = getQuestionStartTimestamp();
+    return Math.min((Date.now() - startTs) / 1000, QUESTION_TIME_LIMIT);
+  };
 
   const handleTimeoutContinue = useCallback(() => {
-    const timeSpent = Math.min((Date.now() - questionStartTime) / 1000, QUESTION_TIME_LIMIT);
+    const timeSpent = getTimeSpent();
     setShowTimeoutModal(false);
     if (currentQuestion) skipQuestion(currentQuestion.id, timeSpent);
     const updatedAnswers = upsertAnswer(state.answers, currentQuestion?.id ?? '', null, timeSpent);
     goToNext(updatedAnswers);
-  }, [currentQuestion, questionStartTime, skipQuestion, state.answers]);
+  }, [currentQuestion, skipQuestion, state.answers]);
 
   const goToNext = (answersForScoring: typeof state.answers = state.answers) => {
     if (state.currentQuestionIndex >= questions.length - 1) {
@@ -125,7 +162,7 @@ export default function Question() {
 
   const handleNext = () => {
     if (selectedAnswer === null) return;
-    const timeSpent = Math.min((Date.now() - questionStartTime) / 1000, QUESTION_TIME_LIMIT);
+    const timeSpent = getTimeSpent();
     if (currentQuestion) answerQuestion(currentQuestion.id, selectedAnswer, timeSpent);
     const updatedAnswers = upsertAnswer(state.answers, currentQuestion?.id ?? '', selectedAnswer, timeSpent);
     goToNext(updatedAnswers);
@@ -137,12 +174,9 @@ export default function Question() {
     <div className="assessment-container">
       <AssessmentHeader />
 
-      {/* ── Layout scrollable, centrado, sin altura fija ── */}
       <main className="w-full max-w-lg mx-auto px-4 py-4 flex flex-col gap-3">
-
         <ProgressBar currentIndex={state.currentQuestionIndex} total={questions.length} />
 
-        {/* Tarjeta de pregunta */}
         <div className="assessment-card p-4 sm:p-6">
           <p className="text-sm sm:text-base font-medium text-foreground text-center leading-snug">
             {currentQuestion.text}
@@ -154,10 +188,8 @@ export default function Question() {
           />
         </div>
 
-        {/* Opciones de respuesta */}
         <AnswerOptions selectedValue={selectedAnswer} onSelect={setSelectedAnswer} />
 
-        {/* Botón siguiente */}
         <button
           onClick={handleNext}
           disabled={selectedAnswer === null}
