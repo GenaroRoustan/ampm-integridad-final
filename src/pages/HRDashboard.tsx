@@ -64,6 +64,7 @@ const normalizeDecisionKey = (value: unknown): Decision => {
   if (normalized === 'APTO') return 'APTO';
   if (normalized === 'CONTRATAR') return 'CONTRATAR';
   if (normalized === 'REVISAR') return 'REVISAR';
+  if (normalized === 'REVISIÓN' || normalized === 'REVISION') return 'REVISAR';
   return 'INVALIDA';
 };
 
@@ -156,18 +157,13 @@ export default function HRDashboard() {
     setIsLoadingCandidates(true);
     setCandidatesError(null);
 
-    // Master mode: always fetch the full list (no token sent from frontend).
     fetch(DASHBOARD_DATA_PROXY_URL, {
       method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
+      headers: { Accept: 'application/json' },
       signal: controller.signal,
     })
       .then(async (res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: unknown = await res.json();
         const list: unknown[] =
           (Array.isArray(data) ? data : null) ??
@@ -186,15 +182,11 @@ export default function HRDashboard() {
         if (
           (err instanceof DOMException && err.name === 'AbortError') ||
           (isRecord(err) && err.name === 'AbortError')
-        ) {
-          return;
-        }
+        ) return;
         setCandidatesError('No se pudieron cargar los datos en vivo.');
         setCandidates([]);
       })
-      .finally(() => {
-        setIsLoadingCandidates(false);
-      });
+      .finally(() => setIsLoadingCandidates(false));
 
     return () => controller.abort();
   }, [session]);
@@ -219,16 +211,10 @@ export default function HRDashboard() {
       const textarea = document.createElement('textarea');
       textarea.value = text;
       textarea.setAttribute('readonly', '');
-      textarea.style.position = 'fixed';
-      textarea.style.top = '0';
-      textarea.style.left = '0';
-      textarea.style.opacity = '0';
-      textarea.style.pointerEvents = 'none';
-
+      textarea.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
       document.body.appendChild(textarea);
       textarea.focus();
       textarea.select();
-
       const ok = document.execCommand('copy');
       document.body.removeChild(textarea);
       return ok;
@@ -238,25 +224,19 @@ export default function HRDashboard() {
   };
 
   const copyLink = async () => {
-    const linkToCopy = generatedLink;
-    if (!linkToCopy) return;
-
+    if (!generatedLink) return;
     try {
-      const hasClipboardApi = typeof navigator.clipboard?.writeText === 'function';
-      if (!hasClipboardApi || !window.isSecureContext) {
-        throw new Error('Clipboard API not available in this context');
+      if (typeof navigator.clipboard?.writeText === 'function' && window.isSecureContext) {
+        await navigator.clipboard.writeText(generatedLink);
+      } else {
+        throw new Error('no clipboard api');
       }
-
-      await navigator.clipboard.writeText(linkToCopy);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     } catch {
-      const ok = copyTextFallback(linkToCopy);
-      if (ok) {
+      if (copyTextFallback(generatedLink)) {
         setLinkCopied(true);
         setTimeout(() => setLinkCopied(false), 2000);
-      } else {
-        setLinkCopied(false);
       }
     }
   };
@@ -275,7 +255,7 @@ export default function HRDashboard() {
     const labels: Record<Decision, string> = {
       APTO: 'Apto',
       CONTRATAR: 'Contratar',
-      REVISAR: 'Revisar',
+      REVISAR: 'Revisión',
       NO_APTO: 'No Apto',
       INVALIDA: 'Inválida',
     };
@@ -319,7 +299,7 @@ export default function HRDashboard() {
           <div className="flex flex-col items-center gap-2 text-center">
             <AlertTriangle className="h-6 w-6 text-timer-warning" />
             <p className="text-sm font-semibold text-foreground">Verificando sesión...</p>
-            <p className="text-xs text-muted-foreground">Espere un momento mientras cargamos el dashboard.</p>
+            <p className="text-xs text-muted-foreground">Espere un momento.</p>
           </div>
         </div>
       </div>
@@ -378,61 +358,74 @@ export default function HRDashboard() {
           </div>
         </div>
 
-        {/* Generate Link Card */}
+        {/* Generate Link Card — rediseñado */}
         <div className="dashboard-card mb-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
             <LinkIcon className="w-5 h-5 text-primary" />
             Generar enlace de prueba
           </h2>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Puesto
-              </label>
-              <select
-                value={selectedPuesto}
-                onChange={(e) => setSelectedPuesto(e.target.value)}
-                aria-label="Puesto"
-                className="w-full h-11 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="">Selecciona un puesto</option>
-                {puestos.map((puesto) => (
-                  <option key={puesto} value={puesto}>
-                    {puesto}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              onClick={generateLink}
-              disabled={!selectedPuesto}
-              className="btn-primary flex items-center justify-center gap-2 sm:w-auto disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Generar nuevo enlace
-            </button>
-            {generatedLink && (
-              <div className="flex-1 flex items-center gap-2 bg-muted rounded-lg px-4 py-3">
-                <input
-                  type="text"
-                  value={generatedLink}
-                  readOnly
-                  placeholder="Enlace generado"
-                  title="Enlace generado"
-                  aria-label="Enlace generado"
-                  className="flex-1 bg-transparent text-sm text-foreground outline-none"
-                />
-                <button
-                  onClick={copyLink}
-                  className={`flex items-center gap-1 transition-colors ${
-                    linkCopied
-                      ? 'text-stage-autocritica'
-                      : 'text-primary hover:text-primary/80'
-                  }`}
+
+          <div className="flex flex-col gap-5">
+            {/* Pasos 1 y 2 en fila */}
+            <div className="flex flex-col sm:flex-row gap-4 items-end">
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  1 · Selecciona el puesto
+                </label>
+                <select
+                  value={selectedPuesto}
+                  onChange={(e) => setSelectedPuesto(e.target.value)}
+                  aria-label="Puesto"
+                  className="w-full h-11 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
-                  {!linkCopied && <Copy className="w-4 h-4" />}
-                  <span className="text-sm">{linkCopied ? '✅ Copiado' : 'Copiar'}</span>
+                  <option value="">— Selecciona un puesto —</option>
+                  {puestos.map((puesto) => (
+                    <option key={puesto} value={puesto}>{puesto}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  2 · Genera el enlace
+                </label>
+                <button
+                  onClick={generateLink}
+                  disabled={!selectedPuesto}
+                  className="btn-primary h-11 px-6 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Generar enlace
                 </button>
+              </div>
+            </div>
+
+            {/* Paso 3: enlace generado */}
+            {generatedLink && (
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  3 · Copia y comparte
+                </label>
+                <div className="flex items-center gap-3 bg-muted rounded-lg px-4 py-3 border border-border">
+                  <input
+                    type="text"
+                    value={generatedLink}
+                    readOnly
+                    aria-label="Enlace generado"
+                    className="flex-1 bg-transparent text-sm text-foreground outline-none font-mono truncate"
+                  />
+                  <button
+                    onClick={copyLink}
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                      linkCopied
+                        ? 'bg-stage-autocritica/10 text-stage-autocritica'
+                        : 'bg-primary/10 text-primary hover:bg-primary/20'
+                    }`}
+                  >
+                    {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {linkCopied ? 'Copiado' : 'Copiar'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
