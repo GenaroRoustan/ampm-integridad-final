@@ -14,33 +14,31 @@ import { ArrowRight } from 'lucide-react';
 const QUESTION_TIME_LIMIT = 45;
 const PROXY_BASE_URL = 'https://proxy-seguridad.replit.app';
 const URL_PROXY = `${PROXY_BASE_URL}/enviar-prueba`;
+const TS_KEY = 'ampm_q_start_ts';
+const IDX_KEY = 'ampm_q_index';
+
+// Lee cuánto tiempo real queda para la pregunta actual
+function getRemainingSeconds(questionIndex: number): number {
+  try {
+    const savedIndex = Number(sessionStorage.getItem(IDX_KEY) ?? -1);
+    const savedTs    = Number(sessionStorage.getItem(TS_KEY) ?? 0);
+    // Si el índice guardado coincide con la pregunta actual, calcular real
+    if (savedIndex === questionIndex && savedTs > 0) {
+      const elapsed = Math.floor((Date.now() - savedTs) / 1000);
+      return Math.max(QUESTION_TIME_LIMIT - elapsed, 0);
+    }
+  } catch { /* ignorar */ }
+  // Primera vez en esta pregunta — guardar timestamp ahora
+  sessionStorage.setItem(TS_KEY, String(Date.now()));
+  sessionStorage.setItem(IDX_KEY, String(questionIndex));
+  return QUESTION_TIME_LIMIT;
+}
 
 export default function Question() {
   const navigate = useNavigate();
   const location = useLocation();
-  const {
-    state,
-    getCurrentQuestion,
-    getProgress,
-    answerQuestion,
-    skipQuestion,
-    nextQuestion,
-    completeAssessment,
-    getQuestionStartTimestamp,
-    setQuestionStartTimestamp,
-  } = useAssessment();
+  const { state, getCurrentQuestion, getProgress, answerQuestion, skipQuestion, nextQuestion, completeAssessment } = useAssessment();
 
-  const [selectedAnswer, setSelectedAnswer] = useState<AnswerValue | null>(null);
-  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
-  const [timerActive, setTimerActive] = useState(true);
-  const [remaining, setRemaining] = useState<number>(() => {
-    // ── Al montar (incluso tras refresh), calcular tiempo real restante ──
-    const startTs = Number(sessionStorage.getItem('ampm_question_start_ts') || Date.now());
-    const elapsed = Math.floor((Date.now() - startTs) / 1000);
-    return Math.max(QUESTION_TIME_LIMIT - elapsed, 0);
-  });
-
-  const intervalRef = useRef<number | null>(null);
   const currentQuestion = getCurrentQuestion();
   const progress = getProgress();
   const currentStage = getStageForQuestionIndex(state.currentQuestionIndex);
@@ -48,6 +46,15 @@ export default function Question() {
     ? getStageForQuestionIndex(state.currentQuestionIndex - 1)
     : null;
   const stageIntroFor = (location.state as { stageIntroFor?: Stage } | null)?.stageIntroFor;
+
+  // ── Timer: inicializar con tiempo REAL restante (sobrevive refresh) ──
+  const [remaining, setRemaining] = useState<number>(() =>
+    getRemainingSeconds(state.currentQuestionIndex)
+  );
+  const [selectedAnswer, setSelectedAnswer] = useState<AnswerValue | null>(null);
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
+  const [timerActive, setTimerActive] = useState(true);
+  const intervalRef = useRef<number | null>(null);
 
   const upsertAnswer = (
     existing: typeof state.answers,
@@ -58,9 +65,9 @@ export default function Question() {
     if (!questionId) return existing;
     const next = [...existing];
     const idx = next.findIndex(a => a.questionId === questionId);
-    const newAnswer = { questionId, value, timeSpent };
-    if (idx >= 0) { next[idx] = newAnswer; return next; }
-    next.push(newAnswer);
+    const entry = { questionId, value, timeSpent };
+    if (idx >= 0) { next[idx] = entry; return next; }
+    next.push(entry);
     return next;
   };
 
@@ -70,32 +77,34 @@ export default function Question() {
     }
   }, [state.currentQuestionIndex, currentStage, previousStage, navigate, stageIntroFor]);
 
-  // Al cambiar de pregunta (no en el primer render): resetear timer y guardar nuevo timestamp
-  const isFirstRender = useRef(true);
+  // Al cambiar de pregunta: guardar nuevo timestamp y resetear timer
+  const prevIndexRef = useRef(state.currentQuestionIndex);
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      // Primera carga — el remaining ya fue calculado en el useState inicial
-      // Si ya llegó a 0 (el candidato tardó demasiado en refrescar), mostrar timeout
-      if (remaining === 0) {
-        setTimerActive(false);
-        setShowTimeoutModal(true);
-      }
-      return;
-    }
-    // Cambio real de pregunta
+    if (prevIndexRef.current === state.currentQuestionIndex) return; // montaje inicial, no resetear
+    prevIndexRef.current = state.currentQuestionIndex;
+
+    // Nueva pregunta — guardar timestamp fresco
+    sessionStorage.setItem(TS_KEY, String(Date.now()));
+    sessionStorage.setItem(IDX_KEY, String(state.currentQuestionIndex));
+
     setSelectedAnswer(null);
     setShowTimeoutModal(false);
     setTimerActive(true);
-    const now = Date.now();
-    setQuestionStartTimestamp(now);
     setRemaining(QUESTION_TIME_LIMIT);
   }, [state.currentQuestionIndex]);
+
+  // Si al cargar ya llegó a 0 (refresh tardío), mostrar timeout directamente
+  useEffect(() => {
+    if (remaining === 0) {
+      setTimerActive(false);
+      setShowTimeoutModal(true);
+    }
+  }, []);
 
   // Timer loop
   useEffect(() => {
     if (intervalRef.current !== null) { window.clearInterval(intervalRef.current); intervalRef.current = null; }
-    if (!timerActive || remaining === 0) return;
+    if (!timerActive) return;
 
     intervalRef.current = window.setInterval(() => {
       setRemaining(prev => {
@@ -113,16 +122,16 @@ export default function Question() {
   }, [timerActive]);
 
   const getTimeSpent = () => {
-    const startTs = getQuestionStartTimestamp();
-    return Math.min((Date.now() - startTs) / 1000, QUESTION_TIME_LIMIT);
+    const savedTs = Number(sessionStorage.getItem(TS_KEY) ?? Date.now());
+    return Math.min((Date.now() - savedTs) / 1000, QUESTION_TIME_LIMIT);
   };
 
   const handleTimeoutContinue = useCallback(() => {
     const timeSpent = getTimeSpent();
     setShowTimeoutModal(false);
     if (currentQuestion) skipQuestion(currentQuestion.id, timeSpent);
-    const updatedAnswers = upsertAnswer(state.answers, currentQuestion?.id ?? '', null, timeSpent);
-    goToNext(updatedAnswers);
+    const updated = upsertAnswer(state.answers, currentQuestion?.id ?? '', null, timeSpent);
+    goToNext(updated);
   }, [currentQuestion, skipQuestion, state.answers]);
 
   const goToNext = (answersForScoring: typeof state.answers = state.answers) => {
@@ -164,8 +173,8 @@ export default function Question() {
     if (selectedAnswer === null) return;
     const timeSpent = getTimeSpent();
     if (currentQuestion) answerQuestion(currentQuestion.id, selectedAnswer, timeSpent);
-    const updatedAnswers = upsertAnswer(state.answers, currentQuestion?.id ?? '', selectedAnswer, timeSpent);
-    goToNext(updatedAnswers);
+    const updated = upsertAnswer(state.answers, currentQuestion?.id ?? '', selectedAnswer, timeSpent);
+    goToNext(updated);
   };
 
   if (!currentQuestion) { navigate('/complete'); return null; }
@@ -173,7 +182,6 @@ export default function Question() {
   return (
     <div className="assessment-container">
       <AssessmentHeader />
-
       <main className="w-full max-w-lg mx-auto px-4 py-4 flex flex-col gap-3">
         <ProgressBar currentIndex={state.currentQuestionIndex} total={questions.length} />
 
