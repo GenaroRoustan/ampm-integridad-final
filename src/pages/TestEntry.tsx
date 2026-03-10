@@ -7,22 +7,23 @@ const generateOpenToken = () => `OPEN-${Date.now()}-${Math.random().toString(36)
 export default function TestEntry() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setToken, setPuesto } = useAssessment();
+  const { setToken, setPuesto, setModalidad } = useAssessment();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-
     const token = (params.get('token') || generateOpenToken()).trim();
-    console.log('Cargando componente TestEntry con token:', token);
     const puestoRaw = (params.get('puesto') || '').trim();
     const puesto = puestoRaw
       ? decodeURIComponent(puestoRaw).replace(/_/g, ' ').trim()
       : null;
+    const modalidad = params.get('modalidad') || 'con_experiencia';
 
     setToken(token);
     setPuesto(puesto);
+    setModalidad(modalidad);
+
     navigate('/candidate-form', { replace: true });
-  }, [location.search, navigate, setToken, setPuesto]);
+  }, [location.search, navigate, setToken, setPuesto, setModalidad]);
 
   return null;
 }
