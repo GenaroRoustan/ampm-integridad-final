@@ -1,6 +1,7 @@
 import type { Question } from '@/types/assessment';
 
-export const questions: Question[] = [
+// ── PRUEBA CON EXPERIENCIA LABORAL (original) ──
+export const questionsConExperiencia: Question[] = [
   // HONESTIDAD (15 preguntas)
   { id: 'H01', text: 'Cuando algo en el trabajo me llama la atención y está al alcance, pienso que nadie se va a dar cuenta si me lo llevo.', stage: 'honesty', reverseScoring: true },
   { id: 'H02', text: 'He marcado mi entrada o salida en un horario diferente al que realmente estuve en el trabajo.', stage: 'honesty', reverseScoring: true },
@@ -53,8 +54,73 @@ export const questions: Question[] = [
   { id: 'A15', text: 'Cuando me di cuenta de algo que hago mal, tomé pasos concretos para cambiarlo, no solo me prometí hacerlo.', stage: 'autocritica', reverseScoring: false },
 ];
 
-export const getQuestionsByStage = (stage: Question['stage']) => 
-  questions.filter(q => q.stage === stage);
+// ── PRUEBA SIN EXPERIENCIA LABORAL (situacional) ──
+export const questionsSinExperiencia: Question[] = [
+  // HONESTIDAD (15 preguntas)
+  { id: 'H01', text: 'Estás en caja y al cerrar el turno te das cuenta que hay C$200 de más que no cuadran con las ventas. ¿Lo reportarías aunque nadie te lo pida?', stage: 'honesty', reverseScoring: false },
+  { id: 'H02', text: 'Tu primer día de trabajo, un compañero te dice: "Aquí todos nos llevamos una cosita pequeña a veces, es normal." ¿Seguirías su ejemplo para no quedar mal?', stage: 'honesty', reverseScoring: true },
+  { id: 'H03', text: 'Estás acomodando mercadería y encuentras un producto dañado que igual podría venderse. ¿Lo sacarías para ti sin decirle a nadie?', stage: 'honesty', reverseScoring: true },
+  { id: 'H04', text: 'Un cliente te paga con un billete y tú sabes que te dio de más. ¿Le devolverías el cambio correcto aunque el cliente no se haya dado cuenta?', stage: 'honesty', reverseScoring: false },
+  { id: 'H05', text: 'Tu supervisor te pide que registres una venta de una manera que no es del todo correcta. ¿Lo harías para no tener problemas con él?', stage: 'honesty', reverseScoring: true },
+  { id: 'H06', text: 'Si ves que un compañero está robando producto de la tienda, ¿lo reportarías a tu jefe aunque ese compañero sea tu amigo?', stage: 'honesty', reverseScoring: false },
+  { id: 'H07', text: 'Te ofrecen un trabajo donde el sueldo es mayor pero el dueño te dice que tendrás que hacer "pequeños favores" que no son del todo legales. ¿Rechazarías esa oferta?', stage: 'honesty', reverseScoring: false },
+  { id: 'H08', text: 'Al contar el efectivo del día encuentras que falta dinero. Sabes que fue un error tuyo al dar cambio. ¿Lo admitirías inmediatamente ante tu jefe?', stage: 'honesty', reverseScoring: false },
+  { id: 'H09', text: 'Un proveedor te ofrece un regalo personal a cambio de que le hagas un pedido más grande de lo necesario. ¿Aceptarías el regalo?', stage: 'honesty', reverseScoring: true },
+  { id: 'H10', text: 'Te piden llenar un inventario y notas que si cambias un número pequeño nadie se daría cuenta y tú quedarías bien con tu jefe. ¿Cambiarías ese número?', stage: 'honesty', reverseScoring: true },
+  { id: 'H11', text: 'Si cometes un error que causó una pérdida para la tienda, ¿serías capaz de decírselo a tu jefe antes de que él lo descubra solo?', stage: 'honesty', reverseScoring: false },
+  { id: 'H12', text: 'Eres cajero y sabes que si cobras C$5 extra en cada transacción nadie lo notaría. ¿Lo harías para ganar un poco más?', stage: 'honesty', reverseScoring: true },
+  { id: 'H13', text: 'Te enteras de información interna de la empresa (precios, problemas, conflictos). ¿Se la contarías a personas de fuera aunque te lo pidieran?', stage: 'honesty', reverseScoring: true },
+  { id: 'H14', text: 'Si un cliente se queja contigo de algo que fue error tuyo, ¿asumirías la responsabilidad directamente en lugar de buscar una excusa?', stage: 'honesty', reverseScoring: false },
+  { id: 'H15', text: '¿Crees que es posible trabajar en una empresa con acceso a efectivo y nunca tomar nada que no sea tuyo, sin importar la situación económica que estés pasando?', stage: 'honesty', reverseScoring: false },
+
+  // SINCERIDAD (15 preguntas)
+  { id: 'S01', text: 'Si pudieras hacer algo incorrecto y estás 100% seguro que nadie se enteraría jamás, ¿igual lo evitarías por convicción propia?', stage: 'sincerity', reverseScoring: false },
+  { id: 'S02', text: 'Cuando alguien te hace una pregunta incómoda, ¿tiendes a decir lo que esa persona quiere escuchar aunque no sea la verdad?', stage: 'sincerity', reverseScoring: true },
+  { id: 'S03', text: 'Si un amigo cercano te pide que lo cubras con una mentira ante tu jefe, ¿lo harías para no perder la amistad?', stage: 'sincerity', reverseScoring: true },
+  { id: 'S04', text: '¿Has mentido alguna vez para evitar meterte en problemas, aunque la mentira perjudicara a alguien más?', stage: 'sincerity', reverseScoring: true },
+  { id: 'S05', text: 'Cuando estás bajo presión o estrés, ¿tiendes a actuar de formas que normalmente no harías?', stage: 'sincerity', reverseScoring: true },
+  { id: 'S06', text: '¿Crees que la honestidad es importante incluso cuando te perjudica a ti mismo?', stage: 'sincerity', reverseScoring: false },
+  { id: 'S07', text: 'Si alguien en tu entorno hace algo incorrecto y todos lo aceptan como normal, ¿adoptarías esa conducta para encajar?', stage: 'sincerity', reverseScoring: true },
+  { id: 'S08', text: '¿Has exagerado tus cualidades o logros para quedar bien ante alguien importante?', stage: 'sincerity', reverseScoring: true },
+  { id: 'S09', text: 'Si ves algo injusto ocurriendo en tu lugar de trabajo, ¿lo reportarías aunque nadie más lo haga y arriesgues ser impopular?', stage: 'sincerity', reverseScoring: false },
+  { id: 'S10', text: '¿Crees que las "pequeñas mentiras" que no dañan a nadie son completamente aceptables en el día a día?', stage: 'sincerity', reverseScoring: true },
+  { id: 'S11', text: '¿Mantienes los mismos valores y conducta tanto cuando estás siendo observado como cuando estás solo?', stage: 'sincerity', reverseScoring: false },
+  { id: 'S12', text: 'Si tu jefe te pide hacer algo que consideras incorrecto, ¿lo harías de todas formas para no perder el trabajo?', stage: 'sincerity', reverseScoring: true },
+  { id: 'S13', text: '¿Crees que una persona puede trabajar en un ambiente donde todos actúan mal y mantener sus propios valores intactos?', stage: 'sincerity', reverseScoring: false },
+  { id: 'S14', text: '¿Te ha pasado que prometes algo que sabes que probablemente no vas a cumplir?', stage: 'sincerity', reverseScoring: true },
+  { id: 'S15', text: 'Si descubres que la empresa donde trabajas está haciendo algo ilegal, ¿lo denunciarías aunque eso signifique quedarte sin trabajo?', stage: 'sincerity', reverseScoring: false },
+
+  // AUTOCRÍTICA (15 preguntas)
+  { id: 'A01', text: 'Cuando cometes un error, ¿tu primera reacción es asumir la responsabilidad en lugar de buscar a quién culpar?', stage: 'autocritica', reverseScoring: false },
+  { id: 'A02', text: '¿Te cuesta reconocer cuando estás equivocado, especialmente frente a otras personas?', stage: 'autocritica', reverseScoring: true },
+  { id: 'A03', text: 'Si un jefe te da una retroalimentación negativa sobre tu trabajo, ¿la recibirías con apertura en lugar de ponerte a la defensiva?', stage: 'autocritica', reverseScoring: false },
+  { id: 'A04', text: '¿Crees que eres capaz de identificar tus propios defectos con honestidad, sin sobreestimarte?', stage: 'autocritica', reverseScoring: false },
+  { id: 'A05', text: 'Si tu forma de hacer una tarea resulta ser incorrecta y un compañero te lo señala, ¿cambiarías tu método aunque hayas estado seguro de que estabas bien?', stage: 'autocritica', reverseScoring: false },
+  { id: 'A06', text: '¿Tiendes a justificar tus errores con circunstancias externas en lugar de asumir tu parte de responsabilidad?', stage: 'autocritica', reverseScoring: true },
+  { id: 'A07', text: 'Si causas un problema en el trabajo por descuido, ¿harías todo lo posible por corregirlo aunque nadie te lo pida?', stage: 'autocritica', reverseScoring: false },
+  { id: 'A08', text: '¿Te has dado cuenta de que a veces actúas de forma impulsiva y luego te arrepientes?', stage: 'autocritica', reverseScoring: true },
+  { id: 'A09', text: '¿Eres capaz de pedir disculpas sinceras cuando sabes que te equivocaste, incluso ante alguien de menor rango que tú?', stage: 'autocritica', reverseScoring: false },
+  { id: 'A10', text: 'Si un supervisor reconoce públicamente el trabajo de otro compañero y no el tuyo, ¿podrías felicitar a ese compañero sinceramente?', stage: 'autocritica', reverseScoring: false },
+  { id: 'A11', text: '¿Te cuesta aceptar las reglas de una empresa cuando sientes que no estás de acuerdo con ellas?', stage: 'autocritica', reverseScoring: true },
+  { id: 'A12', text: 'Cuando algo sale mal en un proyecto grupal en el que participas, ¿asumes tu parte de la culpa aunque otros no lo hagan?', stage: 'autocritica', reverseScoring: false },
+  { id: 'A13', text: '¿Has actuado alguna vez de forma diferente a tus valores solo porque todos a tu alrededor lo hacían?', stage: 'autocritica', reverseScoring: true },
+  { id: 'A14', text: '¿Crees que aprender de los errores es más valioso que nunca cometerlos?', stage: 'autocritica', reverseScoring: false },
+  { id: 'A15', text: 'Si en tu primer mes de trabajo cometes un error grave, ¿serías capaz de decírselo directamente a tu jefe antes de que lo descubra por otro medio?', stage: 'autocritica', reverseScoring: false },
+];
+
+// ── EXPORT DINÁMICO según modalidad ──
+// modalidad: 'con_experiencia' | 'sin_experiencia'
+export function getQuestions(modalidad?: string): Question[] {
+  return modalidad === 'sin_experiencia'
+    ? questionsSinExperiencia
+    : questionsConExperiencia;
+}
+
+// Export por defecto (retrocompatibilidad — usa con experiencia)
+export const questions = questionsConExperiencia;
+
+export const getQuestionsByStage = (stage: Question['stage'], modalidad?: string) =>
+  getQuestions(modalidad).filter(q => q.stage === stage);
 
 export const getStageForQuestionIndex = (index: number): Question['stage'] => {
   if (index < 15) return 'honesty';
@@ -65,4 +131,3 @@ export const getStageForQuestionIndex = (index: number): Question['stage'] => {
 export const getQuestionIndexInStage = (index: number): number => {
   return (index % 15) + 1;
 };
-
