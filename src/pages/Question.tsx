@@ -44,22 +44,17 @@ export default function Question() {
     const next = [...existing];
     const idx = next.findIndex(a => a.questionId === questionId);
     const newAnswer = { questionId, value, timeSpent };
-    if (idx >= 0) {
-      next[idx] = newAnswer;
-      return next;
-    }
+    if (idx >= 0) { next[idx] = newAnswer; return next; }
     next.push(newAnswer);
     return next;
   };
 
-  // Check if we need to show stage intro
   useEffect(() => {
     if (state.currentQuestionIndex > 0 && previousStage !== currentStage && stageIntroFor !== currentStage) {
       navigate(`/stage-intro?stage=${currentStage}`);
     }
   }, [state.currentQuestionIndex, currentStage, previousStage, navigate, stageIntroFor]);
 
-  // Reset state when question changes
   useEffect(() => {
     setSelectedAnswer(null);
     setShowTimeoutModal(false);
@@ -68,47 +63,27 @@ export default function Question() {
     setRemaining(QUESTION_TIME_LIMIT);
   }, [state.currentQuestionIndex]);
 
-  // Timer loop (keeps running even if an answer is selected)
   useEffect(() => {
-    if (intervalRef.current !== null) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
+    if (intervalRef.current !== null) { window.clearInterval(intervalRef.current); intervalRef.current = null; }
     if (!timerActive) return;
-
     intervalRef.current = window.setInterval(() => {
       setRemaining(prev => {
         const next = Math.max(prev - 1, 0);
         if (next === 0) {
-          // Stop timer and trigger timeout UX.
-          if (intervalRef.current !== null) {
-            window.clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
+          if (intervalRef.current !== null) { window.clearInterval(intervalRef.current); intervalRef.current = null; }
           setTimerActive(false);
           setShowTimeoutModal(true);
         }
         return next;
       });
     }, 1000);
-
-    return () => {
-      if (intervalRef.current !== null) {
-        window.clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
+    return () => { if (intervalRef.current !== null) { window.clearInterval(intervalRef.current); intervalRef.current = null; } };
   }, [timerActive, state.currentQuestionIndex]);
 
   const handleTimeoutContinue = useCallback(() => {
     const timeSpent = Math.min((Date.now() - questionStartTime) / 1000, QUESTION_TIME_LIMIT);
     setShowTimeoutModal(false);
-
-    if (currentQuestion) {
-      skipQuestion(currentQuestion.id, timeSpent);
-    }
-
+    if (currentQuestion) skipQuestion(currentQuestion.id, timeSpent);
     const updatedAnswers = upsertAnswer(state.answers, currentQuestion?.id ?? '', null, timeSpent);
     goToNext(updatedAnswers);
   }, [currentQuestion, questionStartTime, skipQuestion, state.answers]);
@@ -117,9 +92,7 @@ export default function Question() {
     if (state.currentQuestionIndex >= questions.length - 1) {
       const { result, meta } = calculateAssessmentResult(questions, answersForScoring);
       const nowIso = new Date().toISOString();
-
       const puesto = (state.puesto ?? '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
-
       const record = {
         id: state.assessmentId || `ASM-${nowIso}`,
         assessmentId: state.assessmentId || `ASM-${nowIso}`,
@@ -133,29 +106,16 @@ export default function Question() {
         totalQuestions: meta.totalQuestions,
         ...result,
       };
-
       saveAssessmentRecord(record);
-
-      // Secure, best-effort submission via proxy (no API keys from client)
       void (async () => {
         try {
           await fetch(URL_PROXY, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              fullName: record.name,
-              cedula: record.cedula,
-              puesto: record.puesto,
-              answers: answersForScoring,
-            }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring }),
           });
-        } catch {
-          // Best-effort: do not block candidate UX if proxy fails.
-        }
+        } catch { /* best-effort */ }
       })();
-
       completeAssessment();
       navigate('/complete');
     } else {
@@ -165,68 +125,54 @@ export default function Question() {
 
   const handleNext = () => {
     if (selectedAnswer === null) return;
-    
     const timeSpent = Math.min((Date.now() - questionStartTime) / 1000, QUESTION_TIME_LIMIT);
-    
-    if (currentQuestion) {
-      answerQuestion(currentQuestion.id, selectedAnswer, timeSpent);
-    }
-
+    if (currentQuestion) answerQuestion(currentQuestion.id, selectedAnswer, timeSpent);
     const updatedAnswers = upsertAnswer(state.answers, currentQuestion?.id ?? '', selectedAnswer, timeSpent);
     goToNext(updatedAnswers);
   };
 
-  if (!currentQuestion) {
-    navigate('/complete');
-    return null;
-  }
+  if (!currentQuestion) { navigate('/complete'); return null; }
 
   return (
     <div className="assessment-container">
       <AssessmentHeader />
 
-      <main className="w-full max-w-lg mx-auto px-4 pt-3 pb-4 flex flex-col h-[calc(100vh-100px)]">
-        {/* Top area: Progress */}
-        <div>
-          <ProgressBar currentIndex={state.currentQuestionIndex} total={questions.length} />
-        </div>
+      {/* ── Layout scrollable, centrado, sin altura fija ── */}
+      <main className="w-full max-w-lg mx-auto px-4 py-4 flex flex-col gap-3">
 
-        {/* Question Card */}
-        <div className="assessment-card mt-3 mb-3 p-5 sm:p-6">
-          <p className="text-base sm:text-lg font-medium text-foreground text-center leading-snug">
+        <ProgressBar currentIndex={state.currentQuestionIndex} total={questions.length} />
+
+        {/* Tarjeta de pregunta */}
+        <div className="assessment-card p-4 sm:p-6">
+          <p className="text-sm sm:text-base font-medium text-foreground text-center leading-snug">
             {currentQuestion.text}
           </p>
           <progress
-            className={`time-bar mt-4 ${remaining <= 15 ? 'time-bar-warning' : 'time-bar-safe'}`}
+            className={`time-bar mt-3 ${remaining <= 15 ? 'time-bar-warning' : 'time-bar-safe'}`}
             value={remaining}
             max={QUESTION_TIME_LIMIT}
           />
         </div>
 
-        {/* Answer Options (flex to keep button visible) */}
-        <div className="flex-1 min-h-0 flex flex-col justify-center">
-          <AnswerOptions selectedValue={selectedAnswer} onSelect={setSelectedAnswer} />
-        </div>
+        {/* Opciones de respuesta */}
+        <AnswerOptions selectedValue={selectedAnswer} onSelect={setSelectedAnswer} />
 
-        {/* Next Button */}
+        {/* Botón siguiente */}
         <button
           onClick={handleNext}
           disabled={selectedAnswer === null}
-          className="btn-primary mt-3 py-3 text-base flex items-center justify-center gap-2 shrink-0"
+          className="btn-primary py-3 text-base flex items-center justify-center gap-2"
         >
           Siguiente
           <ArrowRight className="w-5 h-5" />
         </button>
 
-        <div className="mt-4 text-center text-xs text-gray-500">
+        <div className="text-center text-xs text-gray-500 pb-4">
           Pregunta {progress.current} de {progress.total}
         </div>
       </main>
 
-      <TimeoutModal
-        isOpen={showTimeoutModal}
-        onContinue={handleTimeoutContinue}
-      />
+      <TimeoutModal isOpen={showTimeoutModal} onContinue={handleTimeoutContinue} />
     </div>
   );
 }
