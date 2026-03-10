@@ -2,64 +2,40 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AMPMLogo } from '@/components/AMPMLogo';
 import {
-  Users,
-  CheckCircle,
-  AlertTriangle,
-  XCircle,
-  Link as LinkIcon,
-  LogOut,
-  Copy,
-  Check,
-  RefreshCw,
-  Search,
-  Loader2
+  Users, CheckCircle, AlertTriangle, XCircle,
+  Link as LinkIcon, LogOut, Copy, Check, RefreshCw, Search, Loader2
 } from 'lucide-react';
 
-interface Session {
-  user: string;
-  expiresAt: number;
-}
-
+interface Session { user: string; expiresAt: number; }
 type Decision = 'APTO' | 'CONTRATAR' | 'REVISAR' | 'NO_APTO' | 'INVALIDA';
-
 interface CandidateRecord {
-  id: string;
-  name: string;
-  cedula: string;
-  date: string;
-  honestyScore?: number;
-  sincerityScore?: number;
-  autocriticaScore?: number;
-  decision: Decision;
-  _timestamp: number;
+  id: string; name: string; cedula: string; date: string;
+  honestyScore?: number; sincerityScore?: number; autocriticaScore?: number;
+  decision: Decision; _timestamp: number;
 }
 
 const PROXY_BASE_URL = 'https://proxy-seguridad.replit.app';
 const DASHBOARD_DATA_PROXY_URL = `${PROXY_BASE_URL}/dashboard-data`;
+const APP_PUBLIC_BASE_URL = 'https://genaroroustan.github.io/ampm-integridad-final';
+
+const puestos = ['Agente SAC', 'Gerente de tienda', 'Operativo'];
 
 const asString = (value: unknown): string => {
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return String(value);
   return '';
 };
-
 const asNumber = (value: unknown): number | undefined => {
   const num = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(num) ? num : undefined;
 };
-
 const parseTimestamp = (value: unknown): number => {
   const str = asString(value);
   const ts = str ? Date.parse(str) : NaN;
   return Number.isFinite(ts) ? ts : 0;
 };
-
 const normalizeDecisionKey = (value: unknown): Decision => {
-  const normalized = asString(value)
-    .toUpperCase()
-    .replace(/_/g, ' ')
-    .trim();
-
+  const normalized = asString(value).toUpperCase().replace(/_/g, ' ').trim();
   if (normalized === 'NO APTO') return 'NO_APTO';
   if (normalized === 'APTO') return 'APTO';
   if (normalized === 'CONTRATAR') return 'CONTRATAR';
@@ -67,47 +43,26 @@ const normalizeDecisionKey = (value: unknown): Decision => {
   if (normalized === 'REVISIÓN' || normalized === 'REVISION') return 'REVISAR';
   return 'INVALIDA';
 };
-
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+const getArrayProp = (v: unknown, key: string): unknown[] | null => {
+  if (!isRecord(v)) return null;
+  const p = v[key];
+  return Array.isArray(p) ? p : null;
+};
 const normalizeCandidate = (raw: unknown): CandidateRecord | null => {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
-
   const name = asString(r.name ?? r.nombre ?? r.fullName ?? r.candidateName) || 'Sin nombre';
   const cedula = asString(r.cedula ?? r.candidateId ?? r.id_cedula ?? r.identificacion);
   const dateRaw = r.fecha_reporte ?? r.createdAt ?? r.date;
   const dateStr = asString(dateRaw);
   const timestamp = parseTimestamp(dateRaw);
-
-  const decision = normalizeDecisionKey(
-    r.decision ?? r.decision_final ?? r.resultado ?? r.decisionFinal
-  );
-
+  const decision = normalizeDecisionKey(r.decision ?? r.decision_final ?? r.resultado ?? r.decisionFinal);
   const honestyScore = asNumber(r.honestyScore ?? r.honestidadScore ?? r.honesty ?? r.honestidad);
   const sincerityScore = asNumber(r.sincerityScore ?? r.sinceridadScore ?? r.sincerity ?? r.sinceridad);
   const autocriticaScore = asNumber(r.autocriticaScore ?? r.autoCriticaScore ?? r.autocritica ?? r.autocritica_score);
-
   const id = asString(r.id) || `${cedula || 'no-cedula'}-${dateStr || timestamp || Math.random().toString(36).slice(2)}`;
-
-  return {
-    id,
-    name,
-    cedula,
-    date: dateStr ? dateStr.slice(0, 10) : '-',
-    honestyScore,
-    sincerityScore,
-    autocriticaScore,
-    decision,
-    _timestamp: timestamp,
-  };
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const getArrayProp = (value: unknown, key: string): unknown[] | null => {
-  if (!isRecord(value)) return null;
-  const prop = value[key];
-  return Array.isArray(prop) ? (prop as unknown[]) : null;
+  return { id, name, cedula, date: dateStr ? dateStr.slice(0, 10) : '-', honestyScore, sincerityScore, autocriticaScore, decision, _timestamp: timestamp };
 };
 
 export default function HRDashboard() {
@@ -121,87 +76,46 @@ export default function HRDashboard() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [selectedPuesto, setSelectedPuesto] = useState('');
-
-  const puestos = [
-    'Agente SAC',
-    'Gerente de tienda',
-    'Operativo',
-  ];
-
-  const APP_PUBLIC_BASE_URL = 'https://genaroroustan.github.io/ampm-integridad-final';
+  const [selectedModalidad, setSelectedModalidad] = useState<'con_experiencia' | 'sin_experiencia'>('con_experiencia');
 
   useEffect(() => {
     const sessionData = sessionStorage.getItem('hr_session');
-    if (!sessionData) {
-      setIsCheckingSession(false);
-      navigate('/hr/login');
-      return;
-    }
-
+    if (!sessionData) { setIsCheckingSession(false); navigate('/hr/login'); return; }
     const parsed = JSON.parse(sessionData) as Session;
-    if (Date.now() > parsed.expiresAt) {
-      sessionStorage.removeItem('hr_session');
-      setIsCheckingSession(false);
-      navigate('/hr/login');
-      return;
-    }
-
+    if (Date.now() > parsed.expiresAt) { sessionStorage.removeItem('hr_session'); setIsCheckingSession(false); navigate('/hr/login'); return; }
     setSession(parsed);
     setIsCheckingSession(false);
   }, [navigate]);
 
   useEffect(() => {
     if (!session) return;
-
     const controller = new AbortController();
     setIsLoadingCandidates(true);
     setCandidatesError(null);
-
-    fetch(DASHBOARD_DATA_PROXY_URL, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-      signal: controller.signal,
-    })
+    fetch(DASHBOARD_DATA_PROXY_URL, { method: 'GET', headers: { Accept: 'application/json' }, signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: unknown = await res.json();
-        const list: unknown[] =
-          (Array.isArray(data) ? data : null) ??
-          getArrayProp(data, 'candidates') ??
-          getArrayProp(data, 'data') ??
-          [];
-
-        const normalized = (list as unknown[])
-          .map(normalizeCandidate)
-          .filter((x): x is CandidateRecord => x !== null)
-          .sort((a, b) => (b._timestamp || 0) - (a._timestamp || 0));
-
+        const list: unknown[] = (Array.isArray(data) ? data : null) ?? getArrayProp(data, 'candidates') ?? getArrayProp(data, 'data') ?? [];
+        const normalized = (list as unknown[]).map(normalizeCandidate).filter((x): x is CandidateRecord => x !== null).sort((a, b) => (b._timestamp || 0) - (a._timestamp || 0));
         setCandidates(normalized);
       })
       .catch((err: unknown) => {
-        if (
-          (err instanceof DOMException && err.name === 'AbortError') ||
-          (isRecord(err) && err.name === 'AbortError')
-        ) return;
+        if ((err instanceof DOMException && err.name === 'AbortError') || (isRecord(err) && err.name === 'AbortError')) return;
         setCandidatesError('No se pudieron cargar los datos en vivo.');
         setCandidates([]);
       })
       .finally(() => setIsLoadingCandidates(false));
-
     return () => controller.abort();
   }, [session]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('hr_session');
-    setSession(null);
-    navigate('/hr/login');
-  };
+  const handleLogout = () => { sessionStorage.removeItem('hr_session'); setSession(null); navigate('/hr/login'); };
 
   const generateLink = () => {
     if (!selectedPuesto) return;
     const token = `${Date.now()}-${Math.random().toString(36).substr(2, 12)}`;
     const puestoParam = selectedPuesto.replace(/\s+/g, '_');
-    const link = `${APP_PUBLIC_BASE_URL}/test?token=${token}&puesto=${encodeURIComponent(puestoParam)}`;
+    const link = `${APP_PUBLIC_BASE_URL}/test?token=${token}&puesto=${encodeURIComponent(puestoParam)}&modalidad=${selectedModalidad}`;
     setGeneratedLink(link);
     setLinkCopied(false);
   };
@@ -213,14 +127,11 @@ export default function HRDashboard() {
       textarea.setAttribute('readonly', '');
       textarea.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
       document.body.appendChild(textarea);
-      textarea.focus();
-      textarea.select();
+      textarea.focus(); textarea.select();
       const ok = document.execCommand('copy');
       document.body.removeChild(textarea);
       return ok;
-    } catch {
-      return false;
-    }
+    } catch { return false; }
   };
 
   const copyLink = async () => {
@@ -228,43 +139,21 @@ export default function HRDashboard() {
     try {
       if (typeof navigator.clipboard?.writeText === 'function' && window.isSecureContext) {
         await navigator.clipboard.writeText(generatedLink);
-      } else {
-        throw new Error('no clipboard api');
-      }
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2000);
+      } else { throw new Error('no clipboard api'); }
+      setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000);
     } catch {
-      if (copyTextFallback(generatedLink)) {
-        setLinkCopied(true);
-        setTimeout(() => setLinkCopied(false), 2000);
-      }
+      if (copyTextFallback(generatedLink)) { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); }
     }
   };
 
   const getDecisionBadge = (decision: Decision) => {
     const key = (decision || 'INVALIDA').toUpperCase() as Decision;
-
     const styles: Record<Decision, string> = {
-      APTO: 'bg-stage-autocritica/10 text-stage-autocritica',
-      CONTRATAR: 'bg-stage-autocritica/10 text-stage-autocritica',
-      REVISAR: 'bg-timer-warning/10 text-timer-warning',
-      NO_APTO: 'bg-destructive/10 text-destructive',
-      INVALIDA: 'bg-muted text-muted-foreground',
+      APTO: 'bg-stage-autocritica/10 text-stage-autocritica', CONTRATAR: 'bg-stage-autocritica/10 text-stage-autocritica',
+      REVISAR: 'bg-timer-warning/10 text-timer-warning', NO_APTO: 'bg-destructive/10 text-destructive', INVALIDA: 'bg-muted text-muted-foreground',
     };
-
-    const labels: Record<Decision, string> = {
-      APTO: 'Apto',
-      CONTRATAR: 'Contratar',
-      REVISAR: 'Revisión',
-      NO_APTO: 'No Apto',
-      INVALIDA: 'Inválida',
-    };
-
-    return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[key]}`}>
-        {labels[key]}
-      </span>
-    );
+    const labels: Record<Decision, string> = { APTO: 'Apto', CONTRATAR: 'Contratar', REVISAR: 'Revisión', NO_APTO: 'No Apto', INVALIDA: 'Inválida' };
+    return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[key]}`}>{labels[key]}</span>;
   };
 
   const stats = {
@@ -277,19 +166,8 @@ export default function HRDashboard() {
   const sortedCandidates = [...candidates].sort((a, b) => (b._timestamp || 0) - (a._timestamp || 0));
   const trimmedSearch = searchTerm.trim();
   const normalizedSearch = trimmedSearch.toLowerCase();
-
-  const matchesSearch = (r: CandidateRecord) => {
-    if (!trimmedSearch) return true;
-    return (
-      (r.name || '').toLowerCase().includes(normalizedSearch) ||
-      (r.cedula || '').includes(trimmedSearch)
-    );
-  };
-
-  const displayedCandidates = trimmedSearch
-    ? sortedCandidates.filter(matchesSearch)
-    : sortedCandidates.slice(0, 10);
-
+  const matchesSearch = (r: CandidateRecord) => !trimmedSearch || (r.name || '').toLowerCase().includes(normalizedSearch) || (r.cedula || '').includes(trimmedSearch);
+  const displayedCandidates = trimmedSearch ? sortedCandidates.filter(matchesSearch) : sortedCandidates.slice(0, 10);
   const isShowingTop10Only = !trimmedSearch && sortedCandidates.length > 10;
 
   if (isCheckingSession) {
@@ -310,55 +188,30 @@ export default function HRDashboard() {
 
   return (
     <div className="min-h-screen bg-muted">
-      {/* Header */}
       <header className="bg-card border-b border-border px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <AMPMLogo size="sm" />
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Bienvenido, <span className="font-medium text-foreground">{session.user}</span>
-            </span>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Cerrar sesión
+            <span className="text-sm text-muted-foreground">Bienvenido, <span className="font-medium text-foreground">{session.user}</span></span>
+            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <LogOut className="w-4 h-4" />Cerrar sesión
             </button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-8">
-          Panel de Control - Pruebas de Integridad
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground mb-8">Panel de Control - Pruebas de Integridad</h1>
 
-        {/* Stats Grid */}
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="stat-card">
-            <Users className="w-8 h-8 text-primary mb-2" />
-            <div className="stat-value">{stats.total}</div>
-            <div className="stat-label">Total evaluados</div>
-          </div>
-          <div className="stat-card">
-            <CheckCircle className="w-8 h-8 text-stage-autocritica mb-2" />
-            <div className="stat-value text-stage-autocritica">{stats.apto}</div>
-            <div className="stat-label">Aptos</div>
-          </div>
-          <div className="stat-card">
-            <AlertTriangle className="w-8 h-8 text-timer-warning mb-2" />
-            <div className="stat-value text-timer-warning">{stats.revisar}</div>
-            <div className="stat-label">En revisión</div>
-          </div>
-          <div className="stat-card">
-            <XCircle className="w-8 h-8 text-destructive mb-2" />
-            <div className="stat-value text-destructive">{stats.noApto}</div>
-            <div className="stat-label">No aptos</div>
-          </div>
+          <div className="stat-card"><Users className="w-8 h-8 text-primary mb-2" /><div className="stat-value">{stats.total}</div><div className="stat-label">Total evaluados</div></div>
+          <div className="stat-card"><CheckCircle className="w-8 h-8 text-stage-autocritica mb-2" /><div className="stat-value text-stage-autocritica">{stats.apto}</div><div className="stat-label">Aptos</div></div>
+          <div className="stat-card"><AlertTriangle className="w-8 h-8 text-timer-warning mb-2" /><div className="stat-value text-timer-warning">{stats.revisar}</div><div className="stat-label">En revisión</div></div>
+          <div className="stat-card"><XCircle className="w-8 h-8 text-destructive mb-2" /><div className="stat-value text-destructive">{stats.noApto}</div><div className="stat-label">No aptos</div></div>
         </div>
 
-        {/* Generate Link Card — rediseñado */}
+        {/* Generate Link Card */}
         <div className="dashboard-card mb-8">
           <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
             <LinkIcon className="w-5 h-5 text-primary" />
@@ -366,28 +219,57 @@ export default function HRDashboard() {
           </h2>
 
           <div className="flex flex-col gap-5">
-            {/* Pasos 1 y 2 en fila */}
+            {/* Paso 1 y 2 en fila */}
             <div className="flex flex-col sm:flex-row gap-4 items-end">
+
+              {/* Puesto */}
               <div className="flex-1">
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  1 · Selecciona el puesto
+                  1 · Puesto
                 </label>
                 <select
                   value={selectedPuesto}
                   onChange={(e) => setSelectedPuesto(e.target.value)}
-                  aria-label="Puesto"
                   className="w-full h-11 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="">— Selecciona un puesto —</option>
-                  {puestos.map((puesto) => (
-                    <option key={puesto} value={puesto}>{puesto}</option>
-                  ))}
+                  {puestos.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
 
+              {/* Modalidad */}
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  2 · Experiencia laboral previa
+                </label>
+                <div className="flex rounded-lg border border-input overflow-hidden h-11">
+                  <button
+                    onClick={() => setSelectedModalidad('con_experiencia')}
+                    className={`flex-1 text-sm font-medium transition-colors ${
+                      selectedModalidad === 'con_experiencia'
+                        ? 'bg-primary text-white'
+                        : 'bg-background text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    Con experiencia
+                  </button>
+                  <button
+                    onClick={() => setSelectedModalidad('sin_experiencia')}
+                    className={`flex-1 text-sm font-medium transition-colors border-l border-input ${
+                      selectedModalidad === 'sin_experiencia'
+                        ? 'bg-primary text-white'
+                        : 'bg-background text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    Sin experiencia
+                  </button>
+                </div>
+              </div>
+
+              {/* Botón */}
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  2 · Genera el enlace
+                  3 · Genera
                 </label>
                 <button
                   onClick={generateLink}
@@ -400,26 +282,32 @@ export default function HRDashboard() {
               </div>
             </div>
 
-            {/* Paso 3: enlace generado */}
+            {/* Paso 4: enlace generado */}
             {generatedLink && (
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  3 · Copia y comparte
+                  4 · Copia y comparte
                 </label>
+                {/* Badge de modalidad */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    selectedModalidad === 'sin_experiencia'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+                    {selectedModalidad === 'sin_experiencia' ? '🎓 Prueba sin experiencia' : '💼 Prueba con experiencia'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">· {selectedPuesto}</span>
+                </div>
                 <div className="flex items-center gap-3 bg-muted rounded-lg px-4 py-3 border border-border">
                   <input
-                    type="text"
-                    value={generatedLink}
-                    readOnly
-                    aria-label="Enlace generado"
+                    type="text" value={generatedLink} readOnly
                     className="flex-1 bg-transparent text-sm text-foreground outline-none font-mono truncate"
                   />
                   <button
                     onClick={copyLink}
                     className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                      linkCopied
-                        ? 'bg-stage-autocritica/10 text-stage-autocritica'
-                        : 'bg-primary/10 text-primary hover:bg-primary/20'
+                      linkCopied ? 'bg-stage-autocritica/10 text-stage-autocritica' : 'bg-primary/10 text-primary hover:bg-primary/20'
                     }`}
                   >
                     {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -434,15 +322,10 @@ export default function HRDashboard() {
         {/* Records Table */}
         <div className="dashboard-card">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <h2 className="text-lg font-semibold text-foreground">
-              Resultados de evaluaciones
-            </h2>
+            <h2 className="text-lg font-semibold text-foreground">Resultados de evaluaciones</h2>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Buscar por nombre o cédula..."
-                value={searchTerm}
+              <input type="text" placeholder="Buscar por nombre o cédula..." value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
@@ -452,15 +335,12 @@ export default function HRDashboard() {
           <div className="overflow-x-auto">
             {isLoadingCandidates && (
               <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span className="text-sm">Cargando...</span>
+                <Loader2 className="h-5 w-5 animate-spin" /><span className="text-sm">Cargando...</span>
               </div>
             )}
-
             {!isLoadingCandidates && candidatesError && (
               <div className="text-center py-10 text-destructive text-sm">{candidatesError}</div>
             )}
-
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
@@ -484,15 +364,10 @@ export default function HRDashboard() {
           </div>
 
           {!isLoadingCandidates && !candidatesError && trimmedSearch && displayedCandidates.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No se encontraron resultados para "{searchTerm}"
-            </div>
+            <div className="text-center py-8 text-muted-foreground">No se encontraron resultados para "{searchTerm}"</div>
           )}
-
           {!isLoadingCandidates && !candidatesError && isShowingTop10Only && (
-            <div className="mt-4 text-center text-xs text-muted-foreground">
-              Mostrando los 10 registros más recientes. Usa el buscador para encontrar anteriores.
-            </div>
+            <div className="mt-4 text-center text-xs text-muted-foreground">Mostrando los 10 registros más recientes. Usa el buscador para encontrar anteriores.</div>
           )}
         </div>
       </main>
