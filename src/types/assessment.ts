@@ -1,129 +1,76 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-import type { ReactNode } from 'react';
-import type { AssessmentState, CandidateInfo, Answer, AnswerValue } from '@/types/assessment';
-import { getQuestions } from '@/data/questions';
-
-interface AssessmentContextType {
-  state: AssessmentState;
-  setToken: (token: string) => void;
-  setPuesto: (puesto: string | null) => void;
-  setModalidad: (modalidad: string) => void;
-  setCandidateInfo: (info: CandidateInfo) => void;
-  startAssessment: () => void;
-  answerQuestion: (questionId: string, value: AnswerValue, timeSpent: number) => void;
-  skipQuestion: (questionId: string, timeSpent: number) => void;
-  nextQuestion: () => void;
-  completeAssessment: () => void;
-  getCurrentQuestion: () => ReturnType<typeof getQuestions>[0] | null;
-  getProgress: () => { current: number; total: number; stageProgress: number; stageTotal: number };
+export type Stage = 'honesty' | 'sincerity' | 'autocritica';
+export type AnswerValue = 0 | 1 | 2 | 3;
+export interface Question {
+  id: string;
+  text: string;
+  stage: Stage;
+  reverseScoring: boolean;
+}
+export interface Answer {
+  questionId: string;
+  value: AnswerValue | null;
+  timeSpent: number;
+}
+export interface CandidateInfo {
+  fullName: string;
+  cedula: string;
+}
+export interface AssessmentState {
+  token: string;
+  assessmentId: string;
+  puesto: string | null;
+  modalidad: string;          // 'con_experiencia' | 'sin_experiencia'
+  candidateInfo: CandidateInfo | null;
+  currentQuestionIndex: number;
+  answers: Answer[];
+  startTime: Date | null;
+  isCompleted: boolean;
+}
+export interface AssessmentResult {
+  honestyScore: number;
+  sincerityScore: number;
+  autocriticaScore: number;
+  totalScore: number;
+  decision: 'APTO' | 'REVISAR' | 'NO_APTO' | 'INVALIDA';
 }
 
-const initialState: AssessmentState = {
-  token: '',
-  assessmentId: '',
-  puesto: null,
-  modalidad: 'con_experiencia',
-  candidateInfo: null,
-  currentQuestionIndex: 0,
-  answers: [],
-  startTime: null,
-  isCompleted: false,
-};
+// Opciones según modalidad
+export const ANSWER_OPTIONS_CON_EXPERIENCIA = [
+  { value: 0 as AnswerValue, label: 'No' },
+  { value: 1 as AnswerValue, label: 'Pocas veces' },
+  { value: 2 as AnswerValue, label: 'Muchas veces' },
+  { value: 3 as AnswerValue, label: 'Sí' },
+] as const;
 
-const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
+export const ANSWER_OPTIONS_SIN_EXPERIENCIA = [
+  { value: 0 as AnswerValue, label: 'Nunca lo haría' },
+  { value: 1 as AnswerValue, label: 'Probablemente no' },
+  { value: 2 as AnswerValue, label: 'Probablemente sí' },
+  { value: 3 as AnswerValue, label: 'Sin duda lo haría' },
+] as const;
 
-export function AssessmentProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AssessmentState>(initialState);
+export const ANSWER_OPTIONS = ANSWER_OPTIONS_CON_EXPERIENCIA;
 
-  // Preguntas según modalidad actual
-  const questions = getQuestions(state.modalidad);
-
-  const setToken = useCallback((token: string) => {
-    setState((prev) => ({
-      ...prev,
-      token,
-      assessmentId: `ASM-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    }));
-  }, []);
-
-  const setPuesto = useCallback((puesto: string | null) => {
-    setState((prev) => ({ ...prev, puesto }));
-  }, []);
-
-  const setModalidad = useCallback((modalidad: string) => {
-    setState((prev) => ({ ...prev, modalidad }));
-  }, []);
-
-  const setCandidateInfo = useCallback((info: CandidateInfo) => {
-    setState((prev) => ({ ...prev, candidateInfo: info }));
-  }, []);
-
-  const startAssessment = useCallback(() => {
-    setState((prev) => ({ ...prev, startTime: new Date() }));
-  }, []);
-
-  const answerQuestion = useCallback((questionId: string, value: AnswerValue, timeSpent: number) => {
-    setState((prev) => {
-      const existingIndex = prev.answers.findIndex((a: Answer) => a.questionId === questionId);
-      const newAnswer: Answer = { questionId, value, timeSpent };
-      if (existingIndex >= 0) {
-        const newAnswers = [...prev.answers];
-        newAnswers[existingIndex] = newAnswer;
-        return { ...prev, answers: newAnswers };
-      }
-      return { ...prev, answers: [...prev.answers, newAnswer] };
-    });
-  }, []);
-
-  const skipQuestion = useCallback((questionId: string, timeSpent: number) => {
-    setState((prev) => {
-      const existingIndex = prev.answers.findIndex((a: Answer) => a.questionId === questionId);
-      const newAnswer: Answer = { questionId, value: null, timeSpent };
-      if (existingIndex >= 0) {
-        const newAnswers = [...prev.answers];
-        newAnswers[existingIndex] = newAnswer;
-        return { ...prev, answers: newAnswers };
-      }
-      return { ...prev, answers: [...prev.answers, newAnswer] };
-    });
-  }, []);
-
-  const nextQuestion = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      currentQuestionIndex: Math.min(prev.currentQuestionIndex + 1, questions.length - 1),
-    }));
-  }, [questions.length]);
-
-  const completeAssessment = useCallback(() => {
-    setState((prev) => ({ ...prev, isCompleted: true }));
-  }, []);
-
-  const getCurrentQuestion = useCallback(() => {
-    return questions[state.currentQuestionIndex] || null;
-  }, [questions, state.currentQuestionIndex]);
-
-  const getProgress = useCallback(() => {
-    const current = state.currentQuestionIndex + 1;
-    const total = questions.length;
-    const stageProgress = (state.currentQuestionIndex % 15) + 1;
-    const stageTotal = 15;
-    return { current, total, stageProgress, stageTotal };
-  }, [questions.length, state.currentQuestionIndex]);
-
-  return (
-    <AssessmentContext.Provider value={{
-      state, setToken, setPuesto, setModalidad, setCandidateInfo,
-      startAssessment, answerQuestion, skipQuestion, nextQuestion,
-      completeAssessment, getCurrentQuestion, getProgress,
-    }}>
-      {children}
-    </AssessmentContext.Provider>
-  );
+export function getAnswerOptions(modalidad?: string) {
+  return modalidad === 'sin_experiencia'
+    ? ANSWER_OPTIONS_SIN_EXPERIENCIA
+    : ANSWER_OPTIONS_CON_EXPERIENCIA;
 }
 
-export function useAssessment() {
-  const context = useContext(AssessmentContext);
-  if (!context) throw new Error('useAssessment must be used within an AssessmentProvider');
-  return context;
-}
+export const STAGE_INFO = {
+  honesty: {
+    title: 'Honestidad',
+    description: 'En esta etapa se evaluará su conducta frente a normas, manejo de dinero y productos.',
+    color: 'stage-honesty',
+  },
+  sincerity: {
+    title: 'Sinceridad',
+    description: 'En esta etapa se evaluará su disposición a decir la verdad y evitar excusas.',
+    color: 'stage-sincerity',
+  },
+  autocritica: {
+    title: 'Autocrítica',
+    description: 'En esta etapa se evaluará su capacidad de reconocer errores y aprender de ellos.',
+    color: 'stage-autocritica',
+  },
+} as const;
