@@ -158,7 +158,7 @@ export default function Question() {
           await fetch(URL_PROXY, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring }),
+            body: JSON.stringify({ fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad }),
           });
         } catch { /* best-effort */ }
       })();
