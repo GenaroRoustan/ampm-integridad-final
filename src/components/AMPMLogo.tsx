@@ -7,13 +7,18 @@ interface AMPMLogoProps {
   darkBg?: boolean;
 }
 
-const AMPMLogo: React.FC<AMPMLogoProps> = ({ className = '', size = 'md' }) => {
+const AMPMLogo: React.FC<AMPMLogoProps> = ({ className = '', size = 'md', darkBg = false }) => {
   const heights = { sm: 36, md: 52, lg: 68 };
   return (
     <img
       src={logoAmpm}
       alt="am:pm logo"
-      style={{ height: heights[size], width: 'auto', display: 'inline-block' }}
+      style={{
+        height: heights[size],
+        width: 'auto',
+        display: 'inline-block',
+        mixBlendMode: darkBg ? 'screen' : 'multiply',
+      }}
       className={className}
     />
   );

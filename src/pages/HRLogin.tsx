@@ -66,7 +66,7 @@ export default function HRLogin() {
         {/* Logo + título */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-5">
-            <AMPMLogo size="lg" />
+            <AMPMLogo size="lg" darkBg={true} />
           </div>
           <div
             className="inline-block px-4 py-1 rounded-full text-xs font-semibold tracking-widest uppercase mb-3"
