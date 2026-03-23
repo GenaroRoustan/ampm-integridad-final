@@ -23,9 +23,7 @@ const AMPMLogo: React.FC<AMPMLogoProps> = ({ className = '', size = 'md' }) => {
       className={className}
       aria-label="am:pm logo"
     >
-      {/* Sol - símbolo izquierdo */}
       <g transform="translate(22, 48)">
-        {/* Rayos del sol */}
         {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle, i) => (
           <line
             key={i}
@@ -38,69 +36,19 @@ const AMPMLogo: React.FC<AMPMLogoProps> = ({ className = '', size = 'md' }) => {
             strokeLinecap="round"
           />
         ))}
-        {/* Círculo central del sol */}
         <circle cx="0" cy="0" r="11" fill="#e87200" />
       </g>
-
-      {/* Texto "am" */}
-      <text
-        x="48"
-        y="62"
-        fontFamily="'Arial Black', 'Arial', sans-serif"
-        fontWeight="900"
-        fontSize="42"
-        fill="#e87200"
-        letterSpacing="-1"
-      >
-        am
-      </text>
-
-      {/* Dos puntos separador */}
-      <text
-        x="118"
-        y="62"
-        fontFamily="'Arial Black', 'Arial', sans-serif"
-        fontWeight="900"
-        fontSize="42"
-        fill="#11284a"
-      >
-        :
-      </text>
-
-      {/* Texto "pm" */}
-      <text
-        x="134"
-        y="62"
-        fontFamily="'Arial Black', 'Arial', sans-serif"
-        fontWeight="900"
-        fontSize="42"
-        fill="#11284a"
-        letterSpacing="-1"
-      >
-        pm
-      </text>
-
-      {/* Luna - símbolo derecho */}
+      <text x="48" y="62" fontFamily="'Arial Black', 'Arial', sans-serif" fontWeight="900" fontSize="42" fill="#e87200" letterSpacing="-1">am</text>
+      <text x="118" y="62" fontFamily="'Arial Black', 'Arial', sans-serif" fontWeight="900" fontSize="42" fill="#11284a">:</text>
+      <text x="134" y="62" fontFamily="'Arial Black', 'Arial', sans-serif" fontWeight="900" fontSize="42" fill="#11284a" letterSpacing="-1">pm</text>
       <g transform="translate(218, 48)">
-        <path
-          d="M 0 -22 A 22 22 0 1 1 0 22 A 14 14 0 1 0 0 -22 Z"
-          fill="#11284a"
-        />
+        <path d="M 0 -22 A 22 22 0 1 1 0 22 A 14 14 0 1 0 0 -22 Z" fill="#11284a" />
       </g>
-
-      {/* TM superíndice */}
-      <text
-        x="228"
-        y="30"
-        fontFamily="Arial, sans-serif"
-        fontWeight="normal"
-        fontSize="10"
-        fill="#11284a"
-      >
-        ™
-      </text>
+      <text x="228" y="30" fontFamily="Arial, sans-serif" fontSize="10" fill="#11284a">™</text>
     </svg>
   );
 };
 
+// Exportación nombrada para compatibilidad con AssessmentHeader
+export { AMPMLogo };
 export default AMPMLogo;
