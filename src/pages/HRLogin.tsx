@@ -58,7 +58,7 @@ export default function HRLogin() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: 'linear-gradient(160deg, #2b2d5b 0%, #3d3f7a 60%, #1e2045 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #11284a 0%, #162f57 60%, #0d1f38 100%)' }}
     >
       {/* Card principal */}
       <div className="w-full max-w-md">

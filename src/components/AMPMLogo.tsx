@@ -1,5 +1,5 @@
 import React from 'react';
-import logoAmpm from '@/assets/logo-ampm.jpeg';
+import logoAmpm from '@/assets/logo-ampm.webp';
 
 interface AMPMLogoProps {
   className?: string;
@@ -9,14 +9,11 @@ interface AMPMLogoProps {
 
 const AMPMLogo: React.FC<AMPMLogoProps> = ({ className = '', size = 'md' }) => {
   const heights = { sm: 36, md: 52, lg: 68 };
-  const h = heights[size];
-
   return (
     <img
       src={logoAmpm}
       alt="am:pm logo"
-      height={h}
-      style={{ height: h, width: 'auto', display: 'inline-block' }}
+      style={{ height: heights[size], width: 'auto', display: 'inline-block' }}
       className={className}
     />
   );
