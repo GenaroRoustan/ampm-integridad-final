@@ -59,7 +59,7 @@ export default function HRLogin() {
     <div className="min-h-screen bg-muted flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <AMPMLogo size="lg" className="justify-center mb-6" />
+          <AMPMLogo size="lg" className="mx-auto block mb-6" />
           <h1 className="text-2xl font-bold text-foreground">
             Panel de Recursos Humanos
           </h1>
