@@ -1,25 +1,106 @@
+import React from 'react';
+
 interface AMPMLogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function AMPMLogo({ className = '', size = 'md' }: AMPMLogoProps) {
-  const sizeClasses = {
-    sm: 'h-8',
-    md: 'h-12',
-    lg: 'h-16',
+const AMPMLogo: React.FC<AMPMLogoProps> = ({ className = '', size = 'md' }) => {
+  const sizes = {
+    sm: { width: 120, height: 48 },
+    md: { width: 180, height: 72 },
+    lg: { width: 240, height: 96 },
   };
 
+  const { width, height } = sizes[size];
+
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      <div className={`${sizeClasses[size]} aspect-[2.5/1] bg-primary rounded-lg flex items-center justify-center px-4`}>
-        <span className="text-primary-foreground font-extrabold tracking-tight" style={{ fontSize: size === 'lg' ? '1.5rem' : size === 'md' ? '1.25rem' : '1rem' }}>
-          AMPM
-        </span>
-      </div>
-      <div className="hidden sm:block">
-        <span className="text-sm font-medium text-muted-foreground">Nicaragua</span>
-      </div>
-    </div>
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 240 96"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-label="am:pm logo"
+    >
+      {/* Sol - símbolo izquierdo */}
+      <g transform="translate(22, 48)">
+        {/* Rayos del sol */}
+        {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle, i) => (
+          <line
+            key={i}
+            x1={Math.cos((angle * Math.PI) / 180) * 16}
+            y1={Math.sin((angle * Math.PI) / 180) * 16}
+            x2={Math.cos((angle * Math.PI) / 180) * 22}
+            y2={Math.sin((angle * Math.PI) / 180) * 22}
+            stroke="#e87200"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+          />
+        ))}
+        {/* Círculo central del sol */}
+        <circle cx="0" cy="0" r="11" fill="#e87200" />
+      </g>
+
+      {/* Texto "am" */}
+      <text
+        x="48"
+        y="62"
+        fontFamily="'Arial Black', 'Arial', sans-serif"
+        fontWeight="900"
+        fontSize="42"
+        fill="#e87200"
+        letterSpacing="-1"
+      >
+        am
+      </text>
+
+      {/* Dos puntos separador */}
+      <text
+        x="118"
+        y="62"
+        fontFamily="'Arial Black', 'Arial', sans-serif"
+        fontWeight="900"
+        fontSize="42"
+        fill="#11284a"
+      >
+        :
+      </text>
+
+      {/* Texto "pm" */}
+      <text
+        x="134"
+        y="62"
+        fontFamily="'Arial Black', 'Arial', sans-serif"
+        fontWeight="900"
+        fontSize="42"
+        fill="#11284a"
+        letterSpacing="-1"
+      >
+        pm
+      </text>
+
+      {/* Luna - símbolo derecho */}
+      <g transform="translate(218, 48)">
+        <path
+          d="M 0 -22 A 22 22 0 1 1 0 22 A 14 14 0 1 0 0 -22 Z"
+          fill="#11284a"
+        />
+      </g>
+
+      {/* TM superíndice */}
+      <text
+        x="228"
+        y="30"
+        fontFamily="Arial, sans-serif"
+        fontWeight="normal"
+        fontSize="10"
+        fill="#11284a"
+      >
+        ™
+      </text>
+    </svg>
   );
-}
+};
+
+export default AMPMLogo;
