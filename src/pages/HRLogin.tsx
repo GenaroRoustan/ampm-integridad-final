@@ -45,7 +45,7 @@ export default function HRLogin() {
 
       sessionStorage.setItem('hr_session', JSON.stringify({
         user,
-        expiresAt: Date.now() + 8 * 60 * 60 * 1000, // 8 hours
+        expiresAt: Date.now() + 8 * 60 * 60 * 1000,
       }));
       navigate('/hr/dashboard');
     } catch {
@@ -56,82 +56,126 @@ export default function HRLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-muted flex flex-col items-center justify-center px-4">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{ background: 'linear-gradient(160deg, #11284a 0%, #1a3a6b 60%, #0e2040 100%)' }}
+    >
+      {/* Card principal */}
       <div className="w-full max-w-md">
+
+        {/* Logo + título */}
         <div className="text-center mb-8">
-          <AMPMLogo size="lg" className="justify-center mb-6" />
-          <h1 className="text-2xl font-bold text-foreground">
-            Panel de Recursos Humanos
+          <div className="flex justify-center mb-5">
+            <AMPMLogo size="lg" />
+          </div>
+          <div
+            className="inline-block px-4 py-1 rounded-full text-xs font-semibold tracking-widest uppercase mb-3"
+            style={{ backgroundColor: '#e87200', color: '#fff' }}
+          >
+            Recursos Humanos
+          </div>
+          <h1 className="text-2xl font-bold text-white">
+            Panel de Control
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-blue-200 mt-1 text-sm">
             Ingrese sus credenciales para acceder
           </p>
         </div>
 
-        <div className="bg-card rounded-2xl p-8 shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Formulario */}
+        <div
+          className="rounded-2xl p-8 shadow-2xl"
+          style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}
+        >
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-destructive text-sm">
+              <div
+                className="rounded-lg p-3 text-sm font-medium"
+                style={{ backgroundColor: 'rgba(232,114,0,0.15)', border: '1px solid #e87200', color: '#ffb366' }}
+              >
                 {error}
               </div>
             )}
 
+            {/* Usuario */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="username" className="block text-sm font-semibold text-blue-100 mb-2">
                 Usuario
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#e87200' }} />
                 <input
                   type="text"
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="form-input pl-12"
                   placeholder="Ingrese su usuario"
                   autoComplete="username"
                   required
+                  className="w-full pl-11 pr-4 py-3 rounded-xl text-sm font-medium outline-none transition-all"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff',
+                  }}
+                  onFocus={e => e.currentTarget.style.border = '1px solid #e87200'}
+                  onBlur={e => e.currentTarget.style.border = '1px solid rgba(255,255,255,0.15)'}
                 />
               </div>
             </div>
 
+            {/* Contraseña */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-blue-100 mb-2">
                 Contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#e87200' }} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="form-input pl-12 pr-12"
                   placeholder="Ingrese su contraseña"
                   autoComplete="current-password"
                   required
+                  className="w-full pl-11 pr-12 py-3 rounded-xl text-sm font-medium outline-none transition-all"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff',
+                  }}
+                  onFocus={e => e.currentTarget.style.border = '1px solid #e87200'}
+                  onBlur={e => e.currentTarget.style.border = '1px solid rgba(255,255,255,0.15)'}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-300 hover:text-white transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
+            {/* Botón */}
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-primary"
+              className="w-full py-3 rounded-xl font-bold text-white text-sm tracking-wide transition-all mt-2"
+              style={{
+                backgroundColor: isLoading ? '#b35800' : '#e87200',
+                boxShadow: '0 4px 20px rgba(232,114,0,0.4)',
+              }}
+              onMouseEnter={e => !isLoading && (e.currentTarget.style.backgroundColor = '#ff9520')}
+              onMouseLeave={e => !isLoading && (e.currentTarget.style.backgroundColor = '#e87200')}
             >
               {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p className="text-center text-xs text-blue-300 mt-6 opacity-70">
           ¿Problemas para acceder? Contacte al administrador del sistema.
         </p>
       </div>
