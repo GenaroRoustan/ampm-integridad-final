@@ -11,36 +11,24 @@ const AMPMLogo: React.FC<AMPMLogoProps> = ({ className = '', size = 'md' }) => {
   };
   const { width, height } = sizes[size];
   return (
-    <svg
-      width={width}
-      height={height}
-      viewBox="0 0 240 96"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-label="am:pm logo"
-    >
+    <svg width={width} height={height} viewBox="0 0 240 96" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="am:pm logo">
       <g transform="translate(22, 48)">
-        {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle, i) => (
-          <line
-            key={i}
-            x1={Math.cos((angle * Math.PI) / 180) * 16}
-            y1={Math.sin((angle * Math.PI) / 180) * 16}
-            x2={Math.cos((angle * Math.PI) / 180) * 22}
-            y2={Math.sin((angle * Math.PI) / 180) * 22}
-            stroke="#ee2e24"
-            strokeWidth="3.5"
-            strokeLinecap="round"
+        {[0,30,60,90,120,150,180,210,240,270,300,330].map((angle, i) => (
+          <line key={i}
+            x1={Math.cos((angle*Math.PI)/180)*16} y1={Math.sin((angle*Math.PI)/180)*16}
+            x2={Math.cos((angle*Math.PI)/180)*22} y2={Math.sin((angle*Math.PI)/180)*22}
+            stroke="#e87200" strokeWidth="3.5" strokeLinecap="round"
           />
         ))}
-        <circle cx="0" cy="0" r="11" fill="#ee2e24" />
+        <circle cx="0" cy="0" r="11" fill="#e87200" />
       </g>
-      <text x="48" y="62" fontFamily="'Arial Black', 'Arial', sans-serif" fontWeight="900" fontSize="42" fill="#ee2e24" letterSpacing="-1">am</text>
-      <text x="118" y="62" fontFamily="'Arial Black', 'Arial', sans-serif" fontWeight="900" fontSize="42" fill="#2b2d5b">:</text>
-      <text x="134" y="62" fontFamily="'Arial Black', 'Arial', sans-serif" fontWeight="900" fontSize="42" fill="#2b2d5b" letterSpacing="-1">pm</text>
+      <text x="48" y="62" fontFamily="'Arial Black','Arial',sans-serif" fontWeight="900" fontSize="42" fill="#e87200" letterSpacing="-1">am</text>
+      <text x="118" y="62" fontFamily="'Arial Black','Arial',sans-serif" fontWeight="900" fontSize="42" fill="#11284a">:</text>
+      <text x="134" y="62" fontFamily="'Arial Black','Arial',sans-serif" fontWeight="900" fontSize="42" fill="#11284a" letterSpacing="-1">pm</text>
       <g transform="translate(218, 48)">
-        <path d="M 0 -22 A 22 22 0 1 1 0 22 A 14 14 0 1 0 0 -22 Z" fill="#2b2d5b" />
+        <path d="M 0 -22 A 22 22 0 1 1 0 22 A 14 14 0 1 0 0 -22 Z" fill="#11284a" />
       </g>
-      <text x="228" y="30" fontFamily="Arial, sans-serif" fontSize="10" fill="#2b2d5b">™</text>
+      <text x="228" y="30" fontFamily="Arial,sans-serif" fontSize="10" fill="#11284a">™</text>
     </svg>
   );
 };
