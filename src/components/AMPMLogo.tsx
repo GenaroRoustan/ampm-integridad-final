@@ -3,39 +3,47 @@ import React from 'react';
 interface AMPMLogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  darkBg?: boolean;
 }
 
-const AMPMLogo: React.FC<AMPMLogoProps> = ({ className = '', size = 'md' }) => {
-  const scales = { sm: 0.65, md: 0.85, lg: 1.1 };
-  const scale = scales[size];
+const AMPMLogo: React.FC<AMPMLogoProps> = ({ className = '', size = 'md', darkBg = false }) => {
+  const configs = {
+    sm: { width: 130, height: 38, fontSize: 32, tmSize: 10, tmX: 122, tmY: 10 },
+    md: { width: 175, height: 52, fontSize: 44, tmSize: 11, tmX: 165, tmY: 14 },
+    lg: { width: 220, height: 65, fontSize: 55, tmSize: 13, tmX: 207, tmY: 17 },
+  };
+
+  const c = configs[size];
+  const pmColor = darkBg ? '#ffffff' : '#11284a';
+  const colonColor = darkBg ? '#ffffff' : '#11284a';
 
   return (
     <svg
-      width={200 * scale}
-      height={60 * scale}
-      viewBox="0 0 200 60"
+      width={c.width}
+      height={c.height}
+      viewBox={`0 0 ${c.width} ${c.height}`}
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       aria-label="am:pm logo"
     >
       <text
-        x="0"
-        y="48"
+        x="2"
+        y={c.height - 8}
         fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
         fontWeight="900"
-        fontSize="52"
-        letterSpacing="-2"
+        fontSize={c.fontSize}
+        letterSpacing="-1"
       >
         <tspan fill="#e87200">am</tspan>
-        <tspan fill="#11284a">:</tspan>
-        <tspan fill="#11284a">pm</tspan>
+        <tspan fill={colonColor}>:</tspan>
+        <tspan fill={pmColor}>pm</tspan>
       </text>
       <text
-        x="185"
-        y="16"
+        x={c.tmX}
+        y={c.tmY}
         fontFamily="Arial, sans-serif"
-        fontSize="11"
-        fill="#11284a"
+        fontSize={c.tmSize}
+        fill={pmColor}
       >
         ™
       </text>
