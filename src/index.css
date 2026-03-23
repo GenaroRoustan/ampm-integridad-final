@@ -73,3 +73,9 @@
 .text-ampm-navy { color: hsl(216, 64%, 18%); }
 .border-ampm-orange { border-color: hsl(29, 100%, 45%); }
 .border-ampm-navy { border-color: hsl(216, 64%, 18%); }
+
+/* Colores de estado */
+.text-stage-autocritica { color: #16a34a; }
+.bg-stage-autocritica { background-color: #16a34a; }
+.text-timer-warning { color: #d97706; }
+.bg-timer-warning { background-color: #d97706; }
