@@ -188,12 +188,12 @@ export default function HRDashboard() {
 
   return (
     <div className="min-h-screen bg-muted">
-      <header style={{backgroundColor: "#11284a", borderBottom: "3px solid #ee2e24"}} className="px-6 py-4">
+      <header className="bg-card border-b border-border px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <AMPMLogo size="sm" darkBg={true} />
+          <AMPMLogo size="sm" />
           <div className="flex items-center gap-4">
-            <span className="text-sm text-blue-200">Bienvenido, <span className="font-semibold text-white">{session.user}</span></span>
-            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-blue-200 hover:text-white transition-colors">
+            <span className="text-sm text-muted-foreground">Bienvenido, <span className="font-medium text-foreground">{session.user}</span></span>
+            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
               <LogOut className="w-4 h-4" />Cerrar sesión
             </button>
           </div>
