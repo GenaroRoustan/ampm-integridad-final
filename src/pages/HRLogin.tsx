@@ -58,7 +58,7 @@ export default function HRLogin() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: 'linear-gradient(160deg, #11284a 0%, #1a3a6b 60%, #0e2040 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #2b2d5b 0%, #3d3f7a 60%, #1e2045 100%)' }}
     >
       {/* Card principal */}
       <div className="w-full max-w-md">
@@ -70,7 +70,7 @@ export default function HRLogin() {
           </div>
           <div
             className="inline-block px-4 py-1 rounded-full text-xs font-semibold tracking-widest uppercase mb-3"
-            style={{ backgroundColor: '#e87200', color: '#fff' }}
+            style={{ backgroundColor: '#ee2e24', color: '#fff' }}
           >
             Recursos Humanos
           </div>
@@ -91,7 +91,7 @@ export default function HRLogin() {
             {error && (
               <div
                 className="rounded-lg p-3 text-sm font-medium"
-                style={{ backgroundColor: 'rgba(232,114,0,0.15)', border: '1px solid #e87200', color: '#ffb366' }}
+                style={{ backgroundColor: 'rgba(238,46,36,0.15)', border: '1px solid #ee2e24', color: '#ffb366' }}
               >
                 {error}
               </div>
@@ -103,7 +103,7 @@ export default function HRLogin() {
                 Usuario
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#e87200' }} />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#ee2e24' }} />
                 <input
                   type="text"
                   id="username"
@@ -130,7 +130,7 @@ export default function HRLogin() {
                 Contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#e87200' }} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#ee2e24' }} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
@@ -165,7 +165,7 @@ export default function HRLogin() {
               className="w-full py-3 rounded-xl font-bold text-white text-sm tracking-wide transition-all mt-2"
               style={{
                 backgroundColor: isLoading ? '#b35800' : '#e87200',
-                boxShadow: '0 4px 20px rgba(232,114,0,0.4)',
+                boxShadow: '0 4px 20px rgba(238,46,36,0.4)',
               }}
               onMouseEnter={e => !isLoading && (e.currentTarget.style.backgroundColor = '#ff9520')}
               onMouseLeave={e => !isLoading && (e.currentTarget.style.backgroundColor = '#e87200')}

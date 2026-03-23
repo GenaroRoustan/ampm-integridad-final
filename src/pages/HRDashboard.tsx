@@ -188,7 +188,7 @@ export default function HRDashboard() {
 
   return (
     <div className="min-h-screen bg-muted">
-      <header style={{backgroundColor: "#11284a", borderBottom: "3px solid #e87200"}} className="px-6 py-4">
+      <header style={{backgroundColor: "#11284a", borderBottom: "3px solid #ee2e24"}} className="px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <AMPMLogo size="sm" darkBg={true} />
           <div className="flex items-center gap-4">

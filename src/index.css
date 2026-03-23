@@ -5,31 +5,28 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 220 60% 15%;
+    --foreground: 237 37% 26%;
 
-    --ampm-orange: 29 100% 45%;
-    --ampm-orange-light: 29 100% 50%;
-    --ampm-navy: 216 64% 18%;
-    --ampm-navy-medium: 220 100% 33%;
-    --ampm-navy-light: 214 100% 36%;
+    --ampm-red: 3 85% 54%;
+    --ampm-navy: 237 37% 26%;
 
-    --primary: 29 100% 45%;
+    --primary: 3 85% 54%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 216 64% 18%;
+    --secondary: 237 37% 26%;
     --secondary-foreground: 0 0% 100%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 60% 15%;
+    --card-foreground: 237 37% 26%;
 
     --border: 220 20% 88%;
     --input: 220 20% 88%;
-    --ring: 29 100% 45%;
+    --ring: 3 85% 54%;
 
     --muted: 220 15% 96%;
     --muted-foreground: 220 15% 45%;
 
-    --accent: 216 64% 18%;
+    --accent: 237 37% 26%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -37,7 +34,6 @@
 
     --radius: 0.5rem;
 
-    /* Veredictos */
     --apto: 142 71% 45%;
     --apto-foreground: 0 0% 100%;
     --revisar: 38 92% 50%;
@@ -48,18 +44,13 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; }
 }
 
-/* Clases utilitarias AM:PM */
-.bg-ampm-orange { background-color: hsl(29, 100%, 45%); }
-.bg-ampm-navy { background-color: hsl(216, 64%, 18%); }
-.text-ampm-orange { color: hsl(29, 100%, 45%); }
-.text-ampm-navy { color: hsl(216, 64%, 18%); }
-.border-ampm-orange { border-color: hsl(29, 100%, 45%); }
-.border-ampm-navy { border-color: hsl(216, 64%, 18%); }
+.bg-ampm-red { background-color: #ee2e24; }
+.bg-ampm-navy { background-color: #2b2d5b; }
+.text-ampm-red { color: #ee2e24; }
+.text-ampm-navy { color: #2b2d5b; }
+.border-ampm-red { border-color: #ee2e24; }
+.border-ampm-navy { border-color: #2b2d5b; }
