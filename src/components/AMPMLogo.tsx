@@ -17,7 +17,7 @@ const AMPMLogo: React.FC<AMPMLogoProps> = ({ className = '', size = 'md', darkBg
         height: heights[size],
         width: 'auto',
         display: 'inline-block',
-        mixBlendMode: 'screen',
+        mixBlendMode: 'multiply',
       }}
       className={className}
     />
