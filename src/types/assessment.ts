@@ -41,12 +41,27 @@ export interface AssessmentResult {
   decision: 'APTO' | 'REVISAR' | 'NO_APTO' | 'INVALIDA';
 }
 
-export const ANSWER_OPTIONS = [
+export const ANSWER_OPTIONS_CON_EXPERIENCIA = [
   { value: 0 as AnswerValue, label: 'No' },
   { value: 1 as AnswerValue, label: 'Pocas veces' },
   { value: 2 as AnswerValue, label: 'Muchas veces' },
   { value: 3 as AnswerValue, label: 'Sí' },
 ] as const;
+
+export const ANSWER_OPTIONS_SIN_EXPERIENCIA = [
+  { value: 0 as AnswerValue, label: 'Nunca lo haría' },
+  { value: 1 as AnswerValue, label: 'Probablemente no' },
+  { value: 2 as AnswerValue, label: 'Probablemente sí' },
+  { value: 3 as AnswerValue, label: 'Sin duda lo haría' },
+] as const;
+
+export const ANSWER_OPTIONS = ANSWER_OPTIONS_CON_EXPERIENCIA;
+
+export function getAnswerOptions(modalidad?: string) {
+  return modalidad === 'sin_experiencia'
+    ? ANSWER_OPTIONS_SIN_EXPERIENCIA
+    : ANSWER_OPTIONS_CON_EXPERIENCIA;
+}
 
 export const STAGE_INFO = {
   honesty: {
