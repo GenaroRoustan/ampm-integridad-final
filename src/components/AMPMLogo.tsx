@@ -15,7 +15,7 @@ export function AMPMLogo({ className = '', size = 'md' }: AMPMLogoProps) {
 
   return (
     <img
-      src="/ampm-integridad-final/logo-ampm.png"
+      src="/AIntegrity-AMPM/logo-ampm.png"
       alt="am:pm logo"
       width={width}
       height={height}
