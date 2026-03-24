@@ -16,7 +16,7 @@ interface CandidateRecord {
 
 const PROXY_BASE_URL = 'https://proxy-seguridad.replit.app';
 const DASHBOARD_DATA_PROXY_URL = `${PROXY_BASE_URL}/dashboard-data`;
-const APP_PUBLIC_BASE_URL = 'https://genaroroustan.github.io/ampm-integridad-final';
+const APP_PUBLIC_BASE_URL = 'https://rh-ampm-nicaragua.github.io/AIntegrity-AMPM';
 
 const puestos = ['Agente SAC', 'Gerente de tienda', 'Operativo'];
 
