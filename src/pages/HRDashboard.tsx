@@ -115,7 +115,8 @@ export default function HRDashboard() {
     if (!selectedPuesto) return;
     const token = `${Date.now()}-${Math.random().toString(36).substr(2, 12)}`;
     const puestoParam = selectedPuesto.replace(/\s+/g, '_');
-    const link = `${APP_PUBLIC_BASE_URL}/test?token=${token}&puesto=${encodeURIComponent(puestoParam)}&modalidad=${selectedModalidad}`;
+    const hrEmail = encodeURIComponent(session?.user ?? "");
+    const link = `${APP_PUBLIC_BASE_URL}/test?token=${token}&puesto=${encodeURIComponent(puestoParam)}&modalidad=${selectedModalidad}&hr=${hrEmail}`;
     setGeneratedLink(link);
     setLinkCopied(false);
   };

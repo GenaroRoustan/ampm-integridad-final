@@ -8,6 +8,7 @@ interface AssessmentContextType {
   setToken: (token: string) => void;
   setPuesto: (puesto: string | null) => void;
   setModalidad: (modalidad: string) => void;
+  setHrEmail: (hrEmail: string) => void;
   setCandidateInfo: (info: CandidateInfo) => void;
   startAssessment: () => void;
   answerQuestion: (questionId: string, value: AnswerValue, timeSpent: number) => void;
@@ -23,6 +24,7 @@ const initialState: AssessmentState = {
   assessmentId: '',
   puesto: null,
   modalidad: 'con_experiencia',
+  hrEmail: '',
   candidateInfo: null,
   currentQuestionIndex: 0,
   answers: [],
@@ -46,6 +48,10 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
 
   const setModalidad = useCallback((modalidad: string) => {
     setState((prev) => ({ ...prev, modalidad }));
+  }, []);
+
+  const setHrEmail = useCallback((hrEmail: string) => {
+    setState((prev) => ({ ...prev, hrEmail }));
   }, []);
 
   const setCandidateInfo = useCallback((info: CandidateInfo) => {
@@ -94,7 +100,7 @@ export function AssessmentProvider({ children }: { children: ReactNode }) {
   }, [questions.length, state.currentQuestionIndex]);
 
   return (
-    <AssessmentContext.Provider value={{ state, setToken, setPuesto, setModalidad, setCandidateInfo, startAssessment, answerQuestion, skipQuestion, nextQuestion, completeAssessment, getCurrentQuestion, getProgress }}>
+    <AssessmentContext.Provider value={{ state, setToken, setPuesto, setModalidad, setHrEmail, setCandidateInfo, startAssessment, answerQuestion, skipQuestion, nextQuestion, completeAssessment, getCurrentQuestion, getProgress }}>
       {children}
     </AssessmentContext.Provider>
   );

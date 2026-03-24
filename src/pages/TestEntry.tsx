@@ -7,7 +7,7 @@ const generateOpenToken = () => `OPEN-${Date.now()}-${Math.random().toString(36)
 export default function TestEntry() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setToken, setPuesto, setModalidad } = useAssessment();
+  const { setToken, setPuesto, setModalidad, setHrEmail } = useAssessment();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -17,13 +17,15 @@ export default function TestEntry() {
       ? decodeURIComponent(puestoRaw).replace(/_/g, ' ').trim()
       : null;
     const modalidad = params.get('modalidad') || 'con_experiencia';
+    const hrEmail = decodeURIComponent(params.get('hr') || '');
 
     setToken(token);
     setPuesto(puesto);
     setModalidad(modalidad);
+    setHrEmail(hrEmail);
 
     navigate('/candidate-form', { replace: true });
-  }, [location.search, navigate, setToken, setPuesto, setModalidad]);
+  }, [location.search, navigate, setToken, setPuesto, setModalidad, setHrEmail]);
 
   return null;
 }
