@@ -53,7 +53,7 @@ export const questionsSinExperiencia: Question[] = [
   { id: 'H02', text: 'Tu primer día en un trabajo, un compañero te dice: "Aquí todos agarramos alguna cosita de vez en cuando, es normal." ¿Harías lo mismo para no quedar mal con él?', stage: 'honesty', reverseScoring: true },
   { id: 'H03', text: 'Estás ordenando productos en una tienda y encuentras uno un poco dañado que igual sirve. ¿Te lo llevarías sin decirle a nadie?', stage: 'honesty', reverseScoring: true },
   { id: 'H04', text: 'En un negocio o restaurante, alguien te da más dinero del que debía. ¿Le devolverías lo que sobra aunque nunca lo descubra?', stage: 'honesty', reverseScoring: false },
-  { id: 'H05', text: 'Tu jefe te pide que anotes algo de una forma que tú sabes que no está bien. ¿Lo harías igual para no tener problemas con él?', stage: 'honesty', reverseScoring: true },
+  { id: 'H05', text: 'Tu jefe te pide que escribas un número diferente al real en un registro. ¿Lo harías para no tener problemas con él?', stage: 'honesty', reverseScoring: true },
   { id: 'H06', text: 'Si ves que un compañero de trabajo está robando cosas de la tienda, ¿lo reportarías a tu jefe aunque sea tu amigo?', stage: 'honesty', reverseScoring: false },
   { id: 'H07', text: 'Te ofrecen un trabajo donde el sueldo es mayor pero el dueño te dice que tendrás que hacer "pequeños favores" que no son del todo legales. ¿Rechazarías esa oferta?', stage: 'honesty', reverseScoring: false },
   { id: 'H08', text: 'Estás contando el dinero del día y te falta plata. Sabes que fue un error tuyo al dar el vuelto. ¿Se lo dirías a tu jefe de inmediato aunque tengas miedo de su reacción?', stage: 'honesty', reverseScoring: false },
