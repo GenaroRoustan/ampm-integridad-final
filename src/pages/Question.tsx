@@ -54,6 +54,7 @@ export default function Question() {
   const [selectedAnswer, setSelectedAnswer] = useState<AnswerValue | null>(null);
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   const [timerActive, setTimerActive] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
   const upsertAnswer = (
@@ -136,6 +137,8 @@ export default function Question() {
 
   const goToNext = (answersForScoring: typeof state.answers = state.answers) => {
     if (state.currentQuestionIndex >= questions.length - 1) {
+      if (isSubmitting) return;
+      setIsSubmitting(true);
       const { result, meta } = calculateAssessmentResult(questions, answersForScoring);
       const nowIso = new Date().toISOString();
       const puesto = (state.puesto ?? '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
