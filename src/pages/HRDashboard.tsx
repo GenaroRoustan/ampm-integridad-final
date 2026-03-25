@@ -79,10 +79,10 @@ export default function HRDashboard() {
   const [selectedModalidad, setSelectedModalidad] = useState<'con_experiencia' | 'sin_experiencia'>('con_experiencia');
 
   useEffect(() => {
-    const sessionData = sessionStorage.getItem('hr_session');
+    const sessionData = localStorage.getItem('hr_session');
     if (!sessionData) { setIsCheckingSession(false); navigate('/hr/login'); return; }
     const parsed = JSON.parse(sessionData) as Session;
-    if (Date.now() > parsed.expiresAt) { sessionStorage.removeItem('hr_session'); setIsCheckingSession(false); navigate('/hr/login'); return; }
+    if (Date.now() > parsed.expiresAt) { localStorage.removeItem('hr_session'); setIsCheckingSession(false); navigate('/hr/login'); return; }
     setSession(parsed);
     setIsCheckingSession(false);
   }, [navigate]);
@@ -109,7 +109,7 @@ export default function HRDashboard() {
     return () => controller.abort();
   }, [session]);
 
-  const handleLogout = () => { sessionStorage.removeItem('hr_session'); setSession(null); navigate('/hr/login'); };
+  const handleLogout = () => { localStorage.removeItem('hr_session'); setSession(null); navigate('/hr/login'); };
 
   const generateLink = () => {
     if (!selectedPuesto) return;

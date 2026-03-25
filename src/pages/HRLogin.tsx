@@ -43,7 +43,7 @@ export default function HRLogin() {
         ? (data as { user: string }).user
         : username.trim();
 
-      sessionStorage.setItem('hr_session', JSON.stringify({
+      localStorage.setItem('hr_session', JSON.stringify({
         user,
         expiresAt: Date.now() + 8 * 60 * 60 * 1000, // 8 hours
       }));
