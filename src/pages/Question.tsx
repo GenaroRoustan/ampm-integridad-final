@@ -137,7 +137,7 @@ export default function Question() {
     void goToNext(updated);
   }, [currentQuestion, skipQuestion, state.answers]);
 
-  const goToNext = async (answersForScoring: typeof state.answers = state.answers) => {
+  const goToNext = (answersForScoring: typeof state.answers = state.answers) => {
     if (state.currentQuestionIndex >= questions.length - 1) {
       if (isSubmittingRef.current) return;
       isSubmittingRef.current = true;
@@ -160,13 +160,15 @@ export default function Question() {
       };
       saveAssessmentRecord(record);
       if (record.name && record.name !== 'Sin nombre' && record.cedula && record.cedula.length > 3) {
-        try {
-          await fetch(URL_PROXY, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail }),
-          });
-        } catch { /* best-effort */ }
+        void (async () => {
+          try {
+            await fetch(URL_PROXY, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail }),
+            });
+          } catch { /* best-effort */ }
+        })();
       }
       completeAssessment();
       navigate('/complete');
@@ -175,12 +177,12 @@ export default function Question() {
     }
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (selectedAnswer === null) return;
     const timeSpent = getTimeSpent();
     if (currentQuestion) answerQuestion(currentQuestion.id, selectedAnswer, timeSpent);
     const updated = upsertAnswer(state.answers, currentQuestion?.id ?? '', selectedAnswer, timeSpent);
-    await goToNext(updated);
+    goToNext(updated);
   };
 
   if (!currentQuestion) { navigate('/complete'); return null; }
