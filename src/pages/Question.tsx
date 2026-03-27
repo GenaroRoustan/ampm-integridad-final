@@ -55,6 +55,7 @@ export default function Question() {
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   const [timerActive, setTimerActive] = useState(true);
   const isSubmittingRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
   const upsertAnswer = (
@@ -128,17 +129,19 @@ export default function Question() {
   };
 
   const handleTimeoutContinue = useCallback(() => {
+    if (isSubmittingRef.current) return;
     const timeSpent = getTimeSpent();
     setShowTimeoutModal(false);
     if (currentQuestion) skipQuestion(currentQuestion.id, timeSpent);
     const updated = upsertAnswer(state.answers, currentQuestion?.id ?? '', null, timeSpent);
-    goToNext(updated);
+    void goToNext(updated);
   }, [currentQuestion, skipQuestion, state.answers]);
 
-  const goToNext = (answersForScoring: typeof state.answers = state.answers) => {
+  const goToNext = async (answersForScoring: typeof state.answers = state.answers) => {
     if (state.currentQuestionIndex >= questions.length - 1) {
       if (isSubmittingRef.current) return;
       isSubmittingRef.current = true;
+      setIsSubmitting(true);
       const { result, meta } = calculateAssessmentResult(questions, answersForScoring);
       const nowIso = new Date().toISOString();
       const puesto = (state.puesto ?? '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
@@ -157,15 +160,13 @@ export default function Question() {
       };
       saveAssessmentRecord(record);
       if (record.name && record.name !== 'Sin nombre' && record.cedula && record.cedula.length > 3) {
-        void (async () => {
-          try {
-            await fetch(URL_PROXY, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail }),
-            });
-          } catch { /* best-effort */ }
-        })();
+        try {
+          await fetch(URL_PROXY, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail }),
+          });
+        } catch { /* best-effort */ }
       }
       completeAssessment();
       navigate('/complete');
@@ -174,12 +175,12 @@ export default function Question() {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (selectedAnswer === null) return;
     const timeSpent = getTimeSpent();
     if (currentQuestion) answerQuestion(currentQuestion.id, selectedAnswer, timeSpent);
     const updated = upsertAnswer(state.answers, currentQuestion?.id ?? '', selectedAnswer, timeSpent);
-    goToNext(updated);
+    await goToNext(updated);
   };
 
   if (!currentQuestion) { navigate('/complete'); return null; }
@@ -205,7 +206,7 @@ export default function Question() {
 
         <button
           onClick={handleNext}
-          disabled={selectedAnswer === null}
+          disabled={selectedAnswer === null || isSubmitting}
           className="btn-primary py-3 text-base flex items-center justify-center gap-2"
         >
           Siguiente
