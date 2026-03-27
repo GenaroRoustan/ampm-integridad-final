@@ -156,15 +156,17 @@ export default function Question() {
         ...result,
       };
       saveAssessmentRecord(record);
-      void (async () => {
-        try {
-          await fetch(URL_PROXY, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail }),
-          });
-        } catch { /* best-effort */ }
-      })();
+      if (record.name && record.name !== 'Sin nombre' && record.cedula && record.cedula.length > 3) {
+        void (async () => {
+          try {
+            await fetch(URL_PROXY, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail }),
+            });
+          } catch { /* best-effort */ }
+        })();
+      }
       completeAssessment();
       navigate('/complete');
     } else {
