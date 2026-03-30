@@ -1,11 +1,16 @@
 import os
 import hmac
+import time
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app, origins=['https://genaroroustan.github.io'])
+
+# Deduplicación: { key: timestamp_unix }
+_dedup_cache: dict[str, float] = {}
+_DEDUP_WINDOW = 60  # segundos
 
 N8N_URL = os.environ.get('N8N_WEBHOOK_URL')
 API_KEY = os.environ.get('N8N_API_KEY')
@@ -24,6 +29,19 @@ def status():
 def proxy_n8n():
     try:
         data = request.json
+        # --- Deduplicación por cédula + ventana de 60s ---
+        cedula = str(data.get('cedula') or '').strip()
+        if cedula:
+            minute_bucket = int(time.time() // _DEDUP_WINDOW)
+            dedup_key = f"{cedula}:{minute_bucket}"
+            now = time.time()
+            expired = [k for k, t in _dedup_cache.items() if now - t > _DEDUP_WINDOW]
+            for k in expired:
+                del _dedup_cache[k]
+            if dedup_key in _dedup_cache:
+                return jsonify({"message": "duplicado ignorado"}), 200
+            _dedup_cache[dedup_key] = now
+        # -------------------------------------------------
         headers = { "Content-Type": "application/json", "x-api-key": API_KEY }
         if not N8N_URL:
             return jsonify({"error": "Falta URL en Secrets"}), 500

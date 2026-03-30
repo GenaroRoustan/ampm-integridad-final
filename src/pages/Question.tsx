@@ -171,7 +171,7 @@ export default function Question() {
         })();
       }
       completeAssessment();
-      navigate('/complete');
+      navigate('/complete', { replace: true });
     } else {
       nextQuestion();
     }
@@ -180,10 +180,6 @@ export default function Question() {
   const handleNext = () => {
     if (isSubmittingRef.current) return;
     if (selectedAnswer === null) return;
-    if (state.currentQuestionIndex >= questions.length - 1) {
-      isSubmittingRef.current = true;
-      setIsSubmitting(true);
-    }
     const timeSpent = getTimeSpent();
     if (currentQuestion) answerQuestion(currentQuestion.id, selectedAnswer, timeSpent);
     const updated = upsertAnswer(state.answers, currentQuestion?.id ?? '', selectedAnswer, timeSpent);
