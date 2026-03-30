@@ -1,6 +1,7 @@
 import os
 import hmac
 import time
+import threading
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -42,17 +43,26 @@ def proxy_n8n():
                 return jsonify({"message": "duplicado ignorado"}), 200
             _dedup_cache[dedup_key] = now
         # -------------------------------------------------
-        headers = { "Content-Type": "application/json", "x-api-key": API_KEY }
         if not N8N_URL:
             return jsonify({"error": "Falta URL en Secrets"}), 500
 
-        response = requests.post(N8N_URL, json=data, headers=headers)
-        if response.status_code == 200:
+        # Lanzar envío a n8n en background y responder 200 inmediatamente
+        # Esto evita que Replit reenvíe la request si el worker muere esperando
+        def enviar_a_n8n(payload: dict) -> None:
             try:
-                return jsonify(response.json()), 200
-            except:
-                return jsonify({"message": "✅ Datos recibidos correctamente"}), 200
-        return jsonify({"error": "n8n error"}), response.status_code
+                print(f"[PROXY] Enviando a n8n - cedula: {payload.get('cedula','?')}", flush=True)
+                requests.post(
+                    N8N_URL,
+                    json=payload,
+                    headers={"Content-Type": "application/json", "x-api-key": API_KEY},
+                    timeout=90,
+                )
+                print(f"[PROXY] n8n OK - cedula: {payload.get('cedula','?')}", flush=True)
+            except Exception as e:
+                print(f"[PROXY] n8n ERROR - cedula: {payload.get('cedula','?')} - {e}", flush=True)
+
+        threading.Thread(target=enviar_a_n8n, args=(data,), daemon=False).start()
+        return jsonify({"message": "✅ Recibido"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
