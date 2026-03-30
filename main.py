@@ -28,7 +28,7 @@ def status():
 @app.route('/enviar-prueba', methods=['POST'])
 def proxy_n8n():
     try:
-        data = request.json
+        data = request.json or {}
         # --- Deduplicación por cédula + ventana de 60s ---
         cedula = str(data.get('cedula') or '').strip()
         if cedula:
