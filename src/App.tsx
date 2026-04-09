@@ -26,8 +26,11 @@ const PROXY_URL = 'https://proxy-seguridad.replit.app/enviar-prueba';
 function usePendingSubmissions() {
   useEffect(() => {
     const KEY = 'ampm_pending_submissions';
-    const pending: unknown[] = JSON.parse(localStorage.getItem(KEY) ?? '[]');
-    if (pending.length === 0) return;
+    let pending: unknown[];
+    try {
+      pending = JSON.parse(localStorage.getItem(KEY) ?? '[]');
+    } catch { return; }
+    if (!Array.isArray(pending) || pending.length === 0) return;
 
     void (async () => {
       const stillPending: unknown[] = [];
