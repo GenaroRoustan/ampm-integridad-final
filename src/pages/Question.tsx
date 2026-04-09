@@ -160,14 +160,27 @@ export default function Question() {
       };
       saveAssessmentRecord(record);
       if (record.name && record.name !== 'Sin nombre' && record.cedula && record.cedula.length > 3) {
+        const payload = { fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail };
         void (async () => {
-          try {
-            await fetch(URL_PROXY, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail }),
-            });
-          } catch { /* best-effort */ }
+          let success = false;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              const res = await fetch(URL_PROXY, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+              });
+              if (res.ok) { success = true; break; }
+            } catch { /* network error, retry */ }
+            if (attempt < 2) await new Promise(r => setTimeout(r, 5000));
+          }
+          if (!success) {
+            try {
+              const pending = JSON.parse(localStorage.getItem('ampm_pending_submissions') ?? '[]');
+              pending.push({ ...payload, timestamp: new Date().toISOString() });
+              localStorage.setItem('ampm_pending_submissions', JSON.stringify(pending));
+            } catch { /* localStorage full or unavailable */ }
+          }
         })();
       }
       completeAssessment();
