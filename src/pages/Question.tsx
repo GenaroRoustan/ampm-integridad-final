@@ -137,7 +137,7 @@ export default function Question() {
     void goToNext(updated);
   }, [currentQuestion, skipQuestion, state.answers]);
 
-  const goToNext = (answersForScoring: typeof state.answers = state.answers) => {
+  const goToNext = async (answersForScoring: typeof state.answers = state.answers) => {
     if (state.currentQuestionIndex >= questions.length - 1) {
       if (isSubmittingRef.current) return;
       isSubmittingRef.current = true;
@@ -159,32 +159,52 @@ export default function Question() {
         ...result,
       };
       saveAssessmentRecord(record);
+      let submitOk = true;
       if (record.name && record.name !== 'Sin nombre' && record.cedula && record.cedula.length > 3) {
-        const payload = { fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail };
-        void (async () => {
-          let success = false;
-          for (let attempt = 0; attempt < 3; attempt++) {
-            try {
-              const res = await fetch(URL_PROXY, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-              });
-              if (res.ok) { success = true; break; }
-            } catch { /* network error, retry */ }
-            if (attempt < 2) await new Promise(r => setTimeout(r, 5000));
-          }
-          if (!success) {
-            try {
-              const pending = JSON.parse(localStorage.getItem('ampm_pending_submissions') ?? '[]');
-              pending.push({ ...payload, timestamp: new Date().toISOString() });
-              localStorage.setItem('ampm_pending_submissions', JSON.stringify(pending));
-            } catch { /* localStorage full or unavailable */ }
-          }
-        })();
+        const submissionId = record.assessmentId;
+        const payload = { fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail, _submissionId: submissionId };
+
+        // Capa 1: persistir ANTES de enviar — sobrevive al cierre de tab.
+        // usePendingSubmissions en App.tsx reenvía en la próxima apertura.
+        try {
+          const raw = JSON.parse(localStorage.getItem('ampm_pending_submissions') ?? '[]');
+          const arr = Array.isArray(raw) ? raw : [];
+          arr.push({ ...payload, timestamp: nowIso });
+          localStorage.setItem('ampm_pending_submissions', JSON.stringify(arr));
+        } catch { /* localStorage lleno o no disponible */ }
+
+        // Capa 2: esperar confirmación real del proxy. Timeout por intento + keepalive.
+        let ok = false;
+        for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+          const controller = new AbortController();
+          const timer = window.setTimeout(() => controller.abort(), 15000);
+          try {
+            const res = await fetch(URL_PROXY, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+              keepalive: true,
+              signal: controller.signal,
+            });
+            if (res.ok) ok = true;
+          } catch { /* timeout o red — reintentar */ }
+          window.clearTimeout(timer);
+          if (!ok && attempt < 2) await new Promise(r => setTimeout(r, 3000));
+        }
+
+        if (ok) {
+          try {
+            const raw = JSON.parse(localStorage.getItem('ampm_pending_submissions') ?? '[]');
+            const arr = Array.isArray(raw) ? raw : [];
+            const filtered = arr.filter((p: { _submissionId?: string }) => p?._submissionId !== submissionId);
+            localStorage.setItem('ampm_pending_submissions', JSON.stringify(filtered));
+          } catch { /* ignorar */ }
+        } else {
+          submitOk = false;
+        }
       }
       completeAssessment();
-      navigate('/complete', { replace: true });
+      navigate(submitOk ? '/complete' : '/complete?pending=1', { replace: true });
     } else {
       nextQuestion();
     }
@@ -196,7 +216,7 @@ export default function Question() {
     const timeSpent = getTimeSpent();
     if (currentQuestion) answerQuestion(currentQuestion.id, selectedAnswer, timeSpent);
     const updated = upsertAnswer(state.answers, currentQuestion?.id ?? '', selectedAnswer, timeSpent);
-    goToNext(updated);
+    void goToNext(updated);
   };
 
   if (!currentQuestion) { navigate('/complete'); return null; }
