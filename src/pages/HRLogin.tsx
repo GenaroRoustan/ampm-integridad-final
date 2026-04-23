@@ -60,7 +60,7 @@ export default function HRLogin() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <AMPMLogo size="lg" className="mx-auto block mb-2" />
-          <p style={{ fontFamily: "Georgia, serif", fontSize: "13px", fontWeight: "300", letterSpacing: "0.25em", color: "#11284a", textTransform: "uppercase", textAlign: "center", marginBottom: "1.5rem", opacity: 0.8 }}>AIntegrity AMPM</p>
+          <p style={{ fontFamily: "Georgia, serif", fontSize: "13px", fontWeight: "300", letterSpacing: "0.25em", color: "#11284a", textTransform: "uppercase", textAlign: "center", marginBottom: "1.5rem", opacity: 0.8 }}>IntegriCheck AMPM</p>
           <h1 className="text-2xl font-bold text-foreground">
             Panel de Recursos Humanos
           </h1>
