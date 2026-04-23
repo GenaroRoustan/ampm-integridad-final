@@ -159,52 +159,70 @@ export default function Question() {
         ...result,
       };
       saveAssessmentRecord(record);
-      let submitOk = true;
-      if (record.name && record.name !== 'Sin nombre' && record.cedula && record.cedula.length > 3) {
-        const submissionId = record.assessmentId;
-        const payload = { fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail, _submissionId: submissionId };
 
-        // Capa 1: persistir ANTES de enviar — sobrevive al cierre de tab.
-        // usePendingSubmissions en App.tsx reenvía en la próxima apertura.
+      // Guard fail-loud: si perdimos la identidad, NO mandar a /complete como si todo estuviera bien.
+      const isIdentityLost = !record.name || record.name === 'Sin nombre' || !record.cedula || record.cedula.length <= 3;
+      if (isIdentityLost) {
+        try {
+          const emergencyPayload = {
+            error: 'IDENTIDAD_PERDIDA',
+            assessmentId: record.assessmentId,
+            token: state.token,
+            modalidad: state.modalidad,
+            hrEmail: state.hrEmail,
+            answers: answersForScoring,
+            timestamp: nowIso,
+          };
+          localStorage.setItem(`ampm_lost_${record.assessmentId}`, JSON.stringify(emergencyPayload));
+        } catch { /* localStorage no disponible */ }
+        navigate('/session-lost', { replace: true });
+        return;
+      }
+
+      const submissionId = record.assessmentId;
+      const payload = { fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail, _submissionId: submissionId };
+
+      // Capa 1: persistir ANTES de enviar — sobrevive al cierre de tab.
+      // usePendingSubmissions en App.tsx reenvía en la próxima apertura.
+      try {
+        const raw = JSON.parse(localStorage.getItem('ampm_pending_submissions') ?? '[]');
+        const arr = Array.isArray(raw) ? raw : [];
+        arr.push({ ...payload, timestamp: nowIso });
+        localStorage.setItem('ampm_pending_submissions', JSON.stringify(arr));
+      } catch { /* localStorage lleno o no disponible */ }
+
+      // Capa 2: esperar confirmación real del proxy. Timeout por intento + keepalive.
+      let ok = false;
+      for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), 25000);
+        try {
+          const res = await fetch(URL_PROXY, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            keepalive: true,
+            signal: controller.signal,
+          });
+          if (res.ok) ok = true;
+        } catch (err) {
+          console.warn(`[AMPM] Envío a proxy falló (intento ${attempt + 1}/3):`, err);
+        }
+        window.clearTimeout(timer);
+        if (!ok && attempt < 2) await new Promise(r => setTimeout(r, 3000));
+      }
+
+      if (ok) {
         try {
           const raw = JSON.parse(localStorage.getItem('ampm_pending_submissions') ?? '[]');
           const arr = Array.isArray(raw) ? raw : [];
-          arr.push({ ...payload, timestamp: nowIso });
-          localStorage.setItem('ampm_pending_submissions', JSON.stringify(arr));
-        } catch { /* localStorage lleno o no disponible */ }
-
-        // Capa 2: esperar confirmación real del proxy. Timeout por intento + keepalive.
-        let ok = false;
-        for (let attempt = 0; attempt < 3 && !ok; attempt++) {
-          const controller = new AbortController();
-          const timer = window.setTimeout(() => controller.abort(), 15000);
-          try {
-            const res = await fetch(URL_PROXY, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload),
-              keepalive: true,
-              signal: controller.signal,
-            });
-            if (res.ok) ok = true;
-          } catch { /* timeout o red — reintentar */ }
-          window.clearTimeout(timer);
-          if (!ok && attempt < 2) await new Promise(r => setTimeout(r, 3000));
-        }
-
-        if (ok) {
-          try {
-            const raw = JSON.parse(localStorage.getItem('ampm_pending_submissions') ?? '[]');
-            const arr = Array.isArray(raw) ? raw : [];
-            const filtered = arr.filter((p: { _submissionId?: string }) => p?._submissionId !== submissionId);
-            localStorage.setItem('ampm_pending_submissions', JSON.stringify(filtered));
-          } catch { /* ignorar */ }
-        } else {
-          submitOk = false;
-        }
+          const filtered = arr.filter((p: { _submissionId?: string }) => p?._submissionId !== submissionId);
+          localStorage.setItem('ampm_pending_submissions', JSON.stringify(filtered));
+        } catch { /* ignorar */ }
       }
+
       completeAssessment();
-      navigate(submitOk ? '/complete' : '/complete?pending=1', { replace: true });
+      navigate(ok ? '/complete' : '/complete?pending=1', { replace: true });
     } else {
       nextQuestion();
     }

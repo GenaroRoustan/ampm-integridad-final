@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { AssessmentState, CandidateInfo, Answer, AnswerValue } from '@/types/assessment';
 import { getQuestions } from '@/data/questions';
@@ -32,10 +32,31 @@ const initialState: AssessmentState = {
   isCompleted: false,
 };
 
+const STORAGE_KEY = 'ampm_assessment_state';
+
+function loadPersistedState(): AssessmentState {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return initialState;
+    const parsed = JSON.parse(raw);
+    if (parsed?.startTime) parsed.startTime = new Date(parsed.startTime);
+    return { ...initialState, ...parsed };
+  } catch {
+    return initialState;
+  }
+}
+
 const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
 
 export function AssessmentProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AssessmentState>(initialState);
+  const [state, setState] = useState<AssessmentState>(loadPersistedState);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch { /* quota excedida o storage deshabilitado */ }
+  }, [state]);
+
   const questions = getQuestions(state.modalidad);
 
   const setToken = useCallback((token: string) => {

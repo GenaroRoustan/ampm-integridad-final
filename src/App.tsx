@@ -15,6 +15,7 @@ import Question from "./pages/Question";
 import Complete from "./pages/Complete";
 import InvalidToken from "./pages/InvalidToken";
 import MaxAttempts from "./pages/MaxAttempts";
+import SessionLost from "./pages/SessionLost";
 import HRLogin from "./pages/HRLogin";
 import HRDashboard from "./pages/HRDashboard";
 import NotFound from "./pages/NotFound";
@@ -75,6 +76,7 @@ const App = () => {
             {/* Error States */}
             <Route path="/invalid-token" element={<InvalidToken />} />
             <Route path="/max-attempts" element={<MaxAttempts />} />
+            <Route path="/session-lost" element={<SessionLost />} />
             
             {/* HR Panel */}
             <Route path="/hr/login" element={<HRLogin />} />
