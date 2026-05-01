@@ -9,6 +9,13 @@ import type { AnswerValue, Stage } from '@/types/assessment';
 import { questions, getStageForQuestionIndex } from '@/data/questions';
 import { calculateAssessmentResult } from '@/lib/scoring';
 import { saveAssessmentRecord } from '@/lib/assessmentRecords';
+import {
+  isAlreadySubmitted,
+  markSubmitted,
+  acquireSendLock,
+  releaseSendLock,
+  getOrCreateSubmissionAnchor,
+} from '@/lib/submissionGuard';
 import { ArrowRight } from 'lucide-react';
 
 const QUESTION_TIME_LIMIT = 45;
@@ -179,40 +186,62 @@ export default function Question() {
         return;
       }
 
-      const submissionId = record.assessmentId;
-      const payload = { fullName: record.name, cedula: record.cedula, puesto: record.puesto, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail, _submissionId: submissionId };
+      // _submissionId estable: si la (cedula, token, modalidad) ya tiene anchor, lo
+      // reusamos. Esto garantiza que un reload del flujo NO produzca un sid nuevo,
+      // y combinado con el dedup del server bloquea cualquier reenvío idéntico.
+      const submissionId = getOrCreateSubmissionAnchor(
+        record.cedula,
+        state.token,
+        state.modalidad,
+        record.assessmentId,
+      );
+      const payload = { fullName: record.name, cedula: record.cedula, puesto: record.puesto, token: state.token, answers: answersForScoring, modalidad: state.modalidad, hrEmail: state.hrEmail, _submissionId: submissionId };
+
+      // Si este sid ya fue confirmado por el server en una corrida previa, no reenviar.
+      if (isAlreadySubmitted(submissionId)) {
+        completeAssessment();
+        navigate('/complete', { replace: true });
+        return;
+      }
 
       // Capa 1: persistir ANTES de enviar — sobrevive al cierre de tab.
       // usePendingSubmissions en App.tsx reenvía en la próxima apertura.
       try {
         const raw = JSON.parse(localStorage.getItem('ampm_pending_submissions') ?? '[]');
         const arr = Array.isArray(raw) ? raw : [];
-        arr.push({ ...payload, timestamp: nowIso });
-        localStorage.setItem('ampm_pending_submissions', JSON.stringify(arr));
+        const filtered = arr.filter((p: { _submissionId?: string }) => p?._submissionId !== submissionId);
+        filtered.push({ ...payload, timestamp: nowIso });
+        localStorage.setItem('ampm_pending_submissions', JSON.stringify(filtered));
       } catch { /* localStorage lleno o no disponible */ }
 
-      // Capa 2: esperar confirmación real del proxy. Timeout por intento + keepalive.
+      // Capa 2: lock global para que el reintento de App.tsx no envíe en paralelo.
+      const lockTaken = acquireSendLock();
       let ok = false;
-      for (let attempt = 0; attempt < 3 && !ok; attempt++) {
-        const controller = new AbortController();
-        const timer = window.setTimeout(() => controller.abort(), 25000);
-        try {
-          const res = await fetch(URL_PROXY, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-            keepalive: true,
-            signal: controller.signal,
-          });
-          if (res.ok) ok = true;
-        } catch (err) {
-          console.warn(`[AMPM] Envío a proxy falló (intento ${attempt + 1}/3):`, err);
+      try {
+        for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+          const controller = new AbortController();
+          const timer = window.setTimeout(() => controller.abort(), 25000);
+          try {
+            const res = await fetch(URL_PROXY, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+              keepalive: true,
+              signal: controller.signal,
+            });
+            if (res.ok) ok = true;
+          } catch (err) {
+            console.warn(`[AMPM] Envío a proxy falló (intento ${attempt + 1}/3):`, err);
+          }
+          window.clearTimeout(timer);
+          if (!ok && attempt < 2) await new Promise(r => setTimeout(r, 3000));
         }
-        window.clearTimeout(timer);
-        if (!ok && attempt < 2) await new Promise(r => setTimeout(r, 3000));
+      } finally {
+        if (lockTaken) releaseSendLock();
       }
 
       if (ok) {
+        markSubmitted(submissionId);
         try {
           const raw = JSON.parse(localStorage.getItem('ampm_pending_submissions') ?? '[]');
           const arr = Array.isArray(raw) ? raw : [];

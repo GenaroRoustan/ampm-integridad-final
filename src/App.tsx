@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { AssessmentProvider } from "@/contexts/AssessmentContext";
+import { isAlreadySubmitted, markSubmitted, acquireSendLock, releaseSendLock } from "@/lib/submissionGuard";
 
 // Pages
 import TestEntry from "./pages/TestEntry";
@@ -27,27 +28,48 @@ const PROXY_URL = 'https://proxy-seguridad.replit.app/enviar-prueba';
 function usePendingSubmissions() {
   useEffect(() => {
     const KEY = 'ampm_pending_submissions';
-    let pending: unknown[];
+    let pending: Array<{ _submissionId?: string }>;
     try {
-      pending = JSON.parse(localStorage.getItem(KEY) ?? '[]');
+      const raw = JSON.parse(localStorage.getItem(KEY) ?? '[]');
+      pending = Array.isArray(raw) ? raw : [];
     } catch { return; }
-    if (!Array.isArray(pending) || pending.length === 0) return;
+    if (pending.length === 0) return;
+
+    // Si hay un envío inline en curso, NO disparar el reintento ahora.
+    // El próximo App-mount lo reintentará si quedaran pendientes.
+    if (!acquireSendLock()) return;
+
+    // Filtrar de entrada los que ya están confirmados — evita reenviar algo
+    // que el server ya recibió pero el frontend no llegó a marcar por timeout.
+    const fresh = pending.filter(e => !e?._submissionId || !isAlreadySubmitted(e._submissionId));
+    if (fresh.length !== pending.length) {
+      try { localStorage.setItem(KEY, JSON.stringify(fresh)); } catch { /* quota */ }
+    }
+    if (fresh.length === 0) { releaseSendLock(); return; }
 
     void (async () => {
-      const stillPending: unknown[] = [];
-      for (const entry of pending) {
-        try {
-          const res = await fetch(PROXY_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(entry),
-          });
-          if (!res.ok) stillPending.push(entry);
-        } catch {
-          stillPending.push(entry);
+      const stillPending: typeof fresh = [];
+      try {
+        for (const entry of fresh) {
+          try {
+            const res = await fetch(PROXY_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(entry),
+            });
+            if (res.ok) {
+              if (entry._submissionId) markSubmitted(entry._submissionId);
+            } else {
+              stillPending.push(entry);
+            }
+          } catch {
+            stillPending.push(entry);
+          }
         }
+        try { localStorage.setItem(KEY, JSON.stringify(stillPending)); } catch { /* quota */ }
+      } finally {
+        releaseSendLock();
       }
-      localStorage.setItem(KEY, JSON.stringify(stillPending));
     })();
   }, []);
 }
