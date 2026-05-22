@@ -9,7 +9,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, origins=['https://genaroroustan.github.io'])
+CORS(app, origins=['https://genaroroustan.github.io', 'https://rh-ampm-nicaragua.github.io'])
 
 # --- Deduplicación persistente con MÚLTIPLES llaves ---
 # El envío se acepta sólo si NINGUNA de estas llaves coincide con un envío previo:
