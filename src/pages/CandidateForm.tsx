@@ -55,9 +55,9 @@ function isValidCedulaBirthDateDDMMYY(ddmmyy: string): boolean {
 
 export default function CandidateForm() {
   const navigate = useNavigate();
-  const { setCandidateInfo } = useAssessment();
-  const [fullName, setFullName] = useState('');
-  const [cedula, setCedula] = useState('');
+  const { state, setCandidateInfo } = useAssessment();
+  const [fullName, setFullName] = useState(() => state.candidateInfo?.fullName ?? '');
+  const [cedula, setCedula] = useState(() => state.candidateInfo?.cedula ?? '');
   const [errors, setErrors] = useState<{ fullName?: string; cedula?: string }>({});
 
   const handleCedulaChange = (nextRaw: string) => {
